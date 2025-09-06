@@ -1,0 +1,12 @@
+# src/main/resources/application.yml
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+server:
+  port: 80
+
+spring.security.passwords:
+  ivan: ${IVAN_CRM_PASSWORD}
+  kirill: ${KIRILL_CRM_PASSWORD}

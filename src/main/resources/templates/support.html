@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Support</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/support.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<div th:insert="~{fragments/header :: header}"></div>
+
+<div class="top-controls-container">
+    <a href="/reviews" class="back-button"><i class="fas fa-arrow-left"></i></a>
+
+    <div class="status-buttons">
+        <a th:each="status : ${T(avishgreen.amvera.crm.enums.SupportRequestStatus).values()}"
+           th:href="@{/support/update-status(id=${request.id}, status=${status})}"
+           th:text="${status.displayName}"
+           class="status-button"
+           th:classappend="${request.status == status} ? 'active' : ''"></a>
+    </div>
+</div>
+
+<div class="new-message-form-container">
+    <div class="new-message-form">
+        <textarea placeholder="Введите ваше сообщение..." rows="4"></textarea>
+        <button class="send-button"><i class="fas fa-arrow-right"></i></button>
+    </div>
+</div>
+
+<div class="main-content-container">
+    <div class="message-history-column">
+        <a href="#bottom" class="go-to-bottom-button tile-button"><i class="fas fa-arrow-down"></i></a>
+
+        <div th:each="message : ${request.messages}" class="message-container">
+            <div class="message-bubble">
+                <p th:text="${message.text}"></p>
+            </div>
+            <p class="message-timestamp-author">
+                <span th:text="${message.author}"></span>
+                <span>-</span>
+                <span th:text="${#temporals.format(message.timestamp, 'HH:mm dd-MM-yyyy')}"></span>
+            </p>
+        </div>
+
+        <a href="#top" class="go-to-top-button tile-button"><i class="fas fa-arrow-up"></i></a>
+    </div>
+
+    <div class="details-column">
+        <div class="details-item">
+            <div class="note-header">
+                <span class="details-label">Примечание</span>
+                <button class="save-note-button"><i class="fas fa-save"></i></button>
+            </div>
+            <div class="details-value">
+                <textarea name="note" rows="5" cols="50" th:text="${request.note}"></textarea>
+            </div>
+        </div>
+        <div class="details-item">
+            <span class="details-label">Автор</span>
+            <span class="details-value" th:text="${request.author}"></span>
+        </div>
+        <div class="details-item">
+            <span class="details-label">Другие участники</span>
+            <span class="details-value">
+                <span th:each="participant, iterStat : ${request.participants}">
+                    <span th:text="${participant}"></span><span th:if="${!iterStat.last}">, </span>
+                </span>
+            </span>
+        </div>
+    </div>
+</div>
+
+<div id="bottom"></div>
+
+</body>
+</html>

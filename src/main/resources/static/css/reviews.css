@@ -1,0 +1,110 @@
+/*
+ * Стили для страницы со списком обращений.
+ * Обновлены в соответствии с изменениями в reviews.html.
+ */
+@charset "UTF-8";
+
+/* Стили для таблицы */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    table-layout: fixed; /* Обязательно для фиксированной ширины колонок */
+}
+
+/* Заголовок таблицы */
+table thead th {
+    background-color: #f0f0f0;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid #ddd;
+}
+
+/* Стиль для всех ячеек в теле таблицы */
+table tbody td {
+    padding: 10px;
+}
+
+/* Ячейка с сообщением, которая должна растягиваться */
+td.message-cell {
+    width: auto; /* Автоматически заполняет оставшееся пространство */
+}
+
+/* Контейнер для "бубля" сообщения и информации об авторе/времени */
+.message-bubble-container {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Сам "бубль" сообщения */
+.message-bubble {
+    background-color: #e6e6e6;
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Ограничиваем количество строк до 3 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* Автор и время */
+.message-timestamp-author {
+    font-size: 0.8em;
+    color: #888;
+    text-align: left;
+    white-space: nowrap;
+}
+
+/* Стиль для остальных колонок (Статус и Примечание) */
+table th:nth-child(2),
+table td:nth-child(2) {
+    width: 150px;
+    min-width: 150px;
+}
+
+table th:nth-child(3),
+table td:nth-child(3) {
+    width: 250px;
+    min-width: 250px;
+}
+
+/* Контейнер для автора и примечания */
+.note-container {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Автор примечания */
+.note-author {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Возвращаем чередование цветов для строк */
+table tbody tr:nth-child(odd) {
+    background-color: #fff;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Делаем курсор-указатель при наведении на строку */
+table tr.clickable-row {
+    cursor: pointer;
+}
+
+/* Удаляем подчеркивание у ссылки */
+table td a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+/* Добавляем эффект при наведении на строку */
+table tr.clickable-row:hover {
+    background-color: #e0e0e0;
+}

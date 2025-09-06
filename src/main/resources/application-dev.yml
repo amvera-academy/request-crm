@@ -1,0 +1,8 @@
+# src/main/resources/application-dev.yml
+isProd: false
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASS}

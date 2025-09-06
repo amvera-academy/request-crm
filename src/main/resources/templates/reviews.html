@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Обращения</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/reviews.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script th:src="@{/js/app.js}"></script>
+
+</head>
+<body>
+<div th:insert="~{fragments/header :: header}"></div>
+
+<h1>Обращения пользователей</h1>
+<table>
+    <thead>
+    <tr>
+        <th>Сообщение</th>
+        <th>Статус</th>
+        <th>Информация</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="request : ${requests}" class="clickable-row" th:data-href="@{/support/{id}(id=${request.id})}">
+        <td class="message-cell">
+            <a th:href="@{/support/{id}(id=${request.id})}">
+                <div class="message-bubble-container">
+                    <span class="message-bubble" th:text="${request.lastMessageText}">
+                        Текст последнего сообщения
+                    </span>
+                    <span class="message-timestamp-author">
+                        <span th:text="${#temporals.format(request.lastUpdateTime, 'dd-MM-yyyy HH:mm')}"></span>
+                    </span>
+                </div>
+            </a>
+        </td>
+        <td th:text="${request.status.displayName}">Статус</td>
+        <td>
+            <div class="note-container">
+                <span th:text="${request.author}" class="note-author"></span>
+                <span th:text="${request.note}" class="note-text"></span>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+# src/main/resources/application-prod.yml
+app:
+  isProd: true
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_DOCKER_CONTAINER_NAME}:5432/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASS}

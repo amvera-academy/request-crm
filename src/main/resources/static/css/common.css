@@ -1,0 +1,30 @@
+@charset "UTF-8";
+
+body {
+    margin: 0;
+    padding: 0 10px; /* Устанавливаем единый отступ для всего контента */
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Общие стили для заголовка */
+.header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 0 -10px; /* Компенсируем отступ body, чтобы header растянулся на всю ширину */
+    border-bottom: none;
+}
+
+.header p, .header form {
+    margin: 0 10px;
+}
+
+/* Стилизация иконки выхода */
+.logout-icon {
+    color: #007bff;
+    font-size: 1.2em;
+    margin-right: 5px;
+}
