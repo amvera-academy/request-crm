@@ -1,6 +1,7 @@
 package avishgreen.amvera.crm.controllers;
 
 import avishgreen.amvera.crm.dto.SupportRequestDto;
+import avishgreen.amvera.crm.enums.SupportRequestStatus;
 import avishgreen.amvera.crm.services.ReviewRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -13,16 +14,25 @@ import java.util.List;
 @Controller
 @RequiredArgsConstructor
 public class ReviewsController {
+
     private final ReviewRequestService reviewRequestService;
 
     @GetMapping("/reviews")
-    public String reviews(Model model, Authentication authentication) {
+    public String getReviews(Model model, Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
             model.addAttribute("username", authentication.getName());
         }
 
-        List<SupportRequestDto> supportRequestsList = reviewRequestService.getReviewRequestsForView();
-        model.addAttribute("requests", supportRequestsList);
+        model.addAttribute("pageTitle", "Обращения");
+
+        // Получаем списки обращений по статусам
+        List<SupportRequestDto> requiresAttention = reviewRequestService.getRequestsByStatus(SupportRequestStatus.REQUIRES_ATTENTION);
+        List<SupportRequestDto> unanswered = reviewRequestService.getRequestsByStatus(SupportRequestStatus.UNANSWERED);
+        List<SupportRequestDto> archive = reviewRequestService.getArchivedRequests(100);
+
+        model.addAttribute("requiresAttention", requiresAttention);
+        model.addAttribute("unanswered", unanswered);
+        model.addAttribute("archive", archive);
 
         return "reviews";
     }

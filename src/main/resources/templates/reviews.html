@@ -7,44 +7,120 @@
     <link rel="stylesheet" th:href="@{/css/reviews.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script th:src="@{/js/app.js}"></script>
-
 </head>
 <body>
-<div th:insert="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: header(pageTitle=${pageTitle})}"></div>
 
-<h1>Обращения пользователей</h1>
-<table>
-    <thead>
-    <tr>
-        <th>Сообщение</th>
-        <th>Статус</th>
-        <th>Информация</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="request : ${requests}" class="clickable-row" th:data-href="@{/support/{id}(id=${request.id})}">
-        <td class="message-cell">
-            <a th:href="@{/support/{id}(id=${request.id})}">
-                <div class="message-bubble-container">
-                    <span class="message-bubble" th:text="${request.lastMessageText}">
-                        Текст последнего сообщения
-                    </span>
-                    <span class="message-timestamp-author">
-                        <span th:text="${#temporals.format(request.lastUpdateTime, 'dd-MM-yyyy HH:mm')}"></span>
-                    </span>
-                </div>
-            </a>
-        </td>
-        <td th:text="${request.status.displayName}">Статус</td>
-        <td>
-            <div class="note-container">
-                <span th:text="${request.author}" class="note-author"></span>
-                <span th:text="${request.note}" class="note-text"></span>
-            </div>
-        </td>
-    </tr>
-    </tbody>
-</table>
+<div class="reviews-container">
+    <div th:if="${requiresAttention.isEmpty() && unanswered.isEmpty() && archive.isEmpty()}" class="no-requests-message">
+        <p>На данный момент нет обращений.</p>
+    </div>
+
+    <div th:if="${!unanswered.isEmpty()}">
+        <h2 class="group-header-text">Неотвеченные</h2>
+        <table class="reviews-table">
+            <thead>
+            <tr>
+                <th>Сообщение</th>
+                <th>Статус</th>
+                <th>Информация</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="request : ${unanswered}"
+                class="clickable-row" th:data-href="@{/support/{id}(id=${request.id})}">
+                <td class="message-cell">
+                    <a th:href="@{/support/{id}(id=${request.id})}">
+                        <div class="message-bubble-container">
+                            <span class="message-bubble" th:text="${request.lastMessageText}"></span>
+                            <span class="message-timestamp-author">
+                                <span th:text="${#temporals.format(request.lastUpdateTime, 'dd-MM-yyyy HH:mm')}"></span>
+                            </span>
+                        </div>
+                    </a>
+                </td>
+                <td th:text="${request.status.displayName}"></td>
+                <td>
+                    <div class="note-container">
+                        <span th:text="${request.author}" class="note-author"></span>
+                        <span th:text="${request.note}" class="note-text"></span>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${!requiresAttention.isEmpty()}">
+        <h2 class="group-header-text">Требует внимания</h2>
+        <table class="reviews-table">
+            <thead>
+            <tr>
+                <th>Сообщение</th>
+                <th>Статус</th>
+                <th>Информация</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="request : ${requiresAttention}"
+                class="clickable-row" th:data-href="@{/support/{id}(id=${request.id})}">
+                <td class="message-cell">
+                    <a th:href="@{/support/{id}(id=${request.id})}">
+                        <div class="message-bubble-container">
+                            <span class="message-bubble" th:text="${request.lastMessageText}"></span>
+                            <span class="message-timestamp-author">
+                                <span th:text="${#temporals.format(request.lastUpdateTime, 'dd-MM-yyyy HH:mm')}"></span>
+                            </span>
+                        </div>
+                    </a>
+                </td>
+                <td th:text="${request.status.displayName}"></td>
+                <td>
+                    <div class="note-container">
+                        <span th:text="${request.author}" class="note-author"></span>
+                        <span th:text="${request.note}" class="note-text"></span>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${!archive.isEmpty()}">
+        <h2 class="group-header-text">Архив</h2>
+        <table class="reviews-table">
+            <thead>
+            <tr>
+                <th>Сообщение</th>
+                <th>Статус</th>
+                <th>Информация</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="request : ${archive}"
+                class="clickable-row" th:data-href="@{/support/{id}(id=${request.id})}">
+                <td class="message-cell">
+                    <a th:href="@{/support/{id}(id=${request.id})}">
+                        <div class="message-bubble-container">
+                            <span class="message-bubble" th:text="${request.lastMessageText}"></span>
+                            <span class="message-timestamp-author">
+                                <span th:text="${#temporals.format(request.lastUpdateTime, 'dd-MM-yyyy HH:mm')}"></span>
+                            </span>
+                        </div>
+                    </a>
+                </td>
+                <td th:text="${request.status.displayName}"></td>
+                <td>
+                    <div class="note-container">
+                        <span th:text="${request.author}" class="note-author"></span>
+                        <span th:text="${request.note}" class="note-text"></span>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 </body>
 </html>

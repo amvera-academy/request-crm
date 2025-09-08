@@ -6,36 +6,38 @@
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/support.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script th:src="@{/js/app.js}"></script>
 </head>
 <body>
 
-<div th:insert="~{fragments/header :: header}"></div>
+<div th:replace="~{fragments/header :: header(pageTitle=${pageTitle})}"></div>
 
-<div class="top-controls-container">
-    <a href="/reviews" class="back-button"><i class="fas fa-arrow-left"></i></a>
+<div class="main-content-wrapper">
 
-    <div class="status-buttons">
-        <a th:each="status : ${T(avishgreen.amvera.crm.enums.SupportRequestStatus).values()}"
-           th:href="@{/support/update-status(id=${request.id}, status=${status})}"
-           th:text="${status.displayName}"
-           class="status-button"
-           th:classappend="${request.status == status} ? 'active' : ''"></a>
+    <div class="top-info-bar">
+        <a href="/reviews" class="back-button"><i class="fas fa-arrow-left"></i></a>
+        <div class="status-buttons">
+            <a th:each="status : ${T(avishgreen.amvera.crm.enums.SupportRequestStatus).values()}"
+               th:href="@{/support/update-status(id=${request.id}, status=${status})}"
+               th:text="${status.displayName}"
+               class="status-button"
+               th:classappend="${request.status == status} ? 'active' : ''"></a>
+        </div>
     </div>
-</div>
 
-<div class="new-message-form-container">
-    <div class="new-message-form">
-        <textarea placeholder="Введите ваше сообщение..." rows="4"></textarea>
-        <button class="send-button"><i class="fas fa-arrow-right"></i></button>
-    </div>
-</div>
-
-<div class="main-content-container">
-    <div class="message-history-column">
+    <div class="message-history-block">
+        <h2 class="block-header">Контекст переписки</h2>
         <a href="#bottom" class="go-to-bottom-button tile-button"><i class="fas fa-arrow-down"></i></a>
 
+        <div class="new-message-form-container">
+            <div class="new-message-form">
+                <textarea placeholder="Введите ваше сообщение..." rows="4"></textarea>
+                <button class="send-button"><i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
         <div th:each="message : ${request.messages}" class="message-container">
-            <div class="message-bubble">
+            <div class="message-bubble" th:classappend="${message.author == request.author} ? 'author-message-bubble' : ''">
                 <p th:text="${message.text}"></p>
             </div>
             <p class="message-timestamp-author">
@@ -44,36 +46,66 @@
                 <span th:text="${#temporals.format(message.timestamp, 'HH:mm dd-MM-yyyy')}"></span>
             </p>
         </div>
-
         <a href="#top" class="go-to-top-button tile-button"><i class="fas fa-arrow-up"></i></a>
     </div>
 
-    <div class="details-column">
-        <div class="details-item">
-            <div class="note-header">
-                <span class="details-label">Примечание</span>
-                <button class="save-note-button"><i class="fas fa-save"></i></button>
-            </div>
-            <div class="details-value">
-                <textarea name="note" rows="5" cols="50" th:text="${request.note}"></textarea>
-            </div>
+    <div class="note-block">
+        <div class="note-header">
+            <span class="note-label">Заметки</span>
+            <button class="save-note-button"><i class="fas fa-save"></i></button>
         </div>
-        <div class="details-item">
-            <span class="details-label">Автор</span>
-            <span class="details-value" th:text="${request.author}"></span>
+        <div class="note-value">
+            <textarea name="note" rows="5" th:text="${request.note}"></textarea>
         </div>
-        <div class="details-item">
-            <span class="details-label">Другие участники</span>
-            <span class="details-value">
-                <span th:each="participant, iterStat : ${request.participants}">
-                    <span th:text="${participant}"></span><span th:if="${!iterStat.last}">, </span>
+        <div class="info-item-row">
+            <div class="info-item">
+                <span class="info-label">Автор:</span>
+                <span class="info-value" th:text="${request.author}"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Другие участники:</span>
+                <span class="info-value">
+                    <span th:each="participant, iterStat : ${request.participants}">
+                        <span th:text="${participant}"></span><span th:if="${!iterStat.last}">, </span>
+                    </span>
                 </span>
-            </span>
+            </div>
         </div>
     </div>
+
+    <div class="past-requests-block">
+        <h2 class="block-header">Предыдущие обращения</h2>
+        <table class="reviews-table">
+            <thead>
+            <tr>
+                <th>Сообщение</th>
+                <th>Статус</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="pastRequest : ${pastRequests}"
+                class="clickable-row" th:data-href="@{/support/{id}(id=${pastRequest.id})}">
+                <td class="message-cell">
+                    <a th:href="@{/support/{id}(id=${pastRequest.id})}">
+                        <div class="message-bubble-container">
+                            <span class="message-bubble" th:text="${pastRequest.lastMessageText}"></span>
+                            <span class="message-timestamp-author">
+                                    <span th:text="${#temporals.format(pastRequest.lastUpdateTime, 'dd-MM-yyyy HH:mm')}"></span>
+                                </span>
+                        </div>
+                    </a>
+                </td>
+                <td th:text="${pastRequest.status.displayName}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
 <div id="bottom"></div>
+
+<script th:src="@{/js/app.js}"></script>
 
 </body>
 </html>

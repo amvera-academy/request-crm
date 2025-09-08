@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum SupportRequestStatus {
+    REQUIRES_ATTENTION("Требует внимания"),
     ANSWERED("Отвечен"),
     UNANSWERED("Не отвечен"),
     COMPLETED("Завершен"),
-    REQUIRES_ATTENTION("Требует внимания"),
     IGNORE("Игнорировать");
 
     private final String displayName;

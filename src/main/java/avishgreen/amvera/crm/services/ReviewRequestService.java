@@ -49,16 +49,27 @@ public class ReviewRequestService {
         List<SupportRequestModel> supportRequestModelList = new ArrayList<>();
         List<SupportRequestStatus> statuses = Arrays.asList(SupportRequestStatus.values());
 
-        for (long i = 1; i <= 15; i++) {
-            String randomNote = notes.get(random.nextInt(notes.size()));
-            SupportRequestStatus randomStatus = statuses.get(random.nextInt(statuses.size()));
+        for (long i = 1; i <= 150; i++) {
+            SupportRequestStatus randomStatus;
 
+            // Распределение статусов: 10% на UNANSWERED + REQUIRES_ATTENTION, 90% на остальные (архив)
+            int statusRoll = random.nextInt(100);
+            if (statusRoll < 5) {
+                randomStatus = SupportRequestStatus.UNANSWERED;
+            } else if (statusRoll < 10) {
+                randomStatus = SupportRequestStatus.REQUIRES_ATTENTION;
+            } else if (statusRoll < 40) { // 30%
+                randomStatus = SupportRequestStatus.COMPLETED;
+            } else if (statusRoll < 70) { // 30%
+                randomStatus = SupportRequestStatus.IGNORE;
+            } else { // 30%
+                randomStatus = SupportRequestStatus.ANSWERED;
+            }
+
+            String randomNote = notes.get(random.nextInt(notes.size()));
             List<SupportMessageDto> messages = generateRandomMessages(i);
             LocalDateTime lastUpdateTime = findLastMessageTime(messages);
-
-            // Заполняем автора на основе самого первого сообщения в сгенерированном списке
             String author = findInitialAuthor(messages);
-
             List<String> participants = messages.stream()
                     .map(SupportMessageDto::author)
                     .distinct()
@@ -78,7 +89,6 @@ public class ReviewRequestService {
         return supportRequestModelList;
     }
 
-    // Добавляем метод для поиска автора самого раннего сообщения
     private String findInitialAuthor(List<SupportMessageDto> messages) {
         return messages.stream()
                 .min(Comparator.comparing(SupportMessageDto::timestamp))
@@ -136,12 +146,36 @@ public class ReviewRequestService {
                 .orElse(null);
     }
 
+    public List<SupportRequestDto> getPreviousRequestsByAuthor(String author, Long currentRequestId) {
+        return supportRequestModels.stream()
+                .filter(request -> request.getAuthor().equals(author))
+                .filter(request -> !request.getId().equals(currentRequestId))
+                .sorted(Comparator.comparing(SupportRequestModel::getLastUpdateTime).reversed())
+                .limit(15)
+                .map(this::mapToSupportRequestDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<SupportRequestDto> getRequestsByStatus(SupportRequestStatus status) {
+        return supportRequestModels.stream()
+                .filter(request -> request.getStatus() == status)
+                .map(this::mapToSupportRequestDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<SupportRequestDto> getArchivedRequests(int limit) {
+        return supportRequestModels.stream()
+                .filter(request -> request.getStatus() == SupportRequestStatus.COMPLETED || request.getStatus() == SupportRequestStatus.IGNORE || request.getStatus() == SupportRequestStatus.ANSWERED)
+                .sorted(Comparator.comparing(SupportRequestModel::getLastUpdateTime).reversed())
+                .limit(limit)
+                .map(this::mapToSupportRequestDto)
+                .collect(Collectors.toList());
+    }
+
     private SupportRequestDto mapToSupportRequestDto(SupportRequestModel model) {
-        // Сортируем сообщения перед тем, как положить их в DTO
         List<SupportMessageDto> messageDtos = new ArrayList<>(model.getMessages());
         messageDtos.sort(Comparator.comparing(SupportMessageDto::timestamp).reversed());
 
-        // Получаем автора на основе самого раннего сообщения
         String initialAuthor = findInitialAuthor(model.getMessages());
 
         return new SupportRequestDto(
@@ -154,38 +188,4 @@ public class ReviewRequestService {
                 model.getStatus()
         );
     }
-
-    public List<SupportRequestDto> getReviewRequestsForView() {
-        return supportRequestModels.stream()
-                .map(model -> {
-                    List<SupportMessageDto> messageDtos = new ArrayList<>(model.getMessages());
-
-                    // Сортируем сообщения по дате-времени.
-                    // Добавляем проверку на null, чтобы избежать ошибок,
-                    // если в данных окажется некорректная запись.
-                    messageDtos.sort(Comparator.comparing(
-                            SupportMessageDto::timestamp,
-                            Comparator.nullsLast(Comparator.naturalOrder())
-                    ));
-
-                    // Получаем автора на основе самого раннего сообщения
-                    String initialAuthor = findInitialAuthor(model.getMessages());
-
-                    return new SupportRequestDto(
-                            model.getId(),
-                            messageDtos,
-                            initialAuthor,
-                            model.getParticipants(),
-                            model.getLastUpdateTime(),
-                            model.getNote(),
-                            model.getStatus()
-                    );
-                })
-                // Добавляем сортировку запросов по lastUpdateTime (от новых к старым)
-                .sorted(Comparator.comparing(
-                        SupportRequestDto::lastUpdateTime,
-                        Comparator.nullsLast(Comparator.reverseOrder())
-                ))
-
-                .collect(Collectors.toList());
-    }}
+}

@@ -1,28 +1,71 @@
+/* common.css */
+
 @charset "UTF-8";
 
+/* ================== Глобальные стили ================== */
 body {
     margin: 0;
-    padding: 0 10px; /* Устанавливаем единый отступ для всего контента */
     font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Общие стили для заголовка */
-.header {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
+button {
+    cursor: pointer;
+    font-size: 1em;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.center-content {
+    text-align: center;
+}
+
+/* ================== Стили для шапки (header) ================== */
+.header-container {
     padding: 10px 20px;
     background-color: #f9f9f9;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin: 0 -10px; /* Компенсируем отступ body, чтобы header растянулся на всю ширину */
-    border-bottom: none;
+    border-bottom: 1px solid #ddd;
 }
 
-.header p, .header form {
-    margin: 0 10px;
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
-/* Стилизация иконки выхода */
+.header-title {
+    margin: 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.header-user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header-user-info p, .header-user-info form {
+    margin: 0;
+}
+
+.header-user-info button {
+    background-color: transparent;
+    border: none;
+    color: #007bff;
+    padding: 0;
+    cursor: pointer;
+    font-size: 1em;
+}
+
 .logout-icon {
     color: #007bff;
     font-size: 1.2em;

@@ -1,56 +1,98 @@
-/*
- * Стили для страницы со списком обращений.
- * Обновлены в соответствии с изменениями в reviews.html.
- */
-@charset "UTF-8";
+/* review.css */
 
-/* Стили для таблицы */
-table {
+/* ================== Общие стили для страницы ================== */
+
+/* Удаляем body-стили, они теперь в common.css */
+/* Устанавливаем padding для основного контейнера */
+.reviews-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px; /* Отступы для контента */
+    margin-top: 20px; /* Отступ от шапки */
+}
+
+.no-requests-message {
+    text-align: center;
+    padding: 50px;
+    color: #888;
+}
+
+/* ================== Стили для заголовков групп ================== */
+
+.group-header-text {
+    font-size: 1.5em;
+    color: #1a2a40;
+    border-bottom: 2px solid #c0c0c0;
+    padding-bottom: 5px;
+    margin: 25px 0 10px 0;
+}
+
+/* ================== Стили для таблиц ================== */
+
+.reviews-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
-    table-layout: fixed; /* Обязательно для фиксированной ширины колонок */
+    table-layout: fixed;
+    margin-top: 10px;
 }
 
-/* Заголовок таблицы */
-table thead th {
+/* ================== Стили для шапки таблицы ================== */
+
+.reviews-table thead th {
     background-color: #f0f0f0;
-    padding: 10px;
+    padding: 12px 15px;
     text-align: left;
     border-bottom: 2px solid #ddd;
+    font-weight: bold;
 }
 
-/* Стиль для всех ячеек в теле таблицы */
-table tbody td {
-    padding: 10px;
+/* ================== Стили для строк с данными ================== */
+
+.reviews-table td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
 }
 
 /* Ячейка с сообщением, которая должна растягиваться */
-td.message-cell {
-    width: auto; /* Автоматически заполняет оставшееся пространство */
+.reviews-table td.message-cell {
+    width: auto;
 }
 
-/* Контейнер для "бубля" сообщения и информации об авторе/времени */
+/* Фиксированная ширина для колонок "Статус" и "Информация" */
+.reviews-table thead th:nth-child(2),
+.reviews-table td:nth-child(2) {
+    width: 150px;
+    min-width: 150px;
+}
+
+.reviews-table thead th:nth-child(3),
+.reviews-table td:nth-child(3) {
+    width: 250px;
+    min-width: 250px;
+}
+
+/* ================== Стили для содержимого ячеек ================== */
+
 .message-bubble-container {
     display: flex;
     flex-direction: column;
 }
 
-/* Сам "бубль" сообщения */
 .message-bubble {
     background-color: #e6e6e6;
     border-radius: 12px;
     padding: 8px 12px;
     margin-bottom: 5px;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Ограничиваем количество строк до 3 */
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-
-/* Автор и время */
 .message-timestamp-author {
     font-size: 0.8em;
     color: #888;
@@ -58,53 +100,61 @@ td.message-cell {
     white-space: nowrap;
 }
 
-/* Стиль для остальных колонок (Статус и Примечание) */
-table th:nth-child(2),
-table td:nth-child(2) {
-    width: 150px;
-    min-width: 150px;
-}
-
-table th:nth-child(3),
-table td:nth-child(3) {
-    width: 250px;
-    min-width: 250px;
-}
-
-/* Контейнер для автора и примечания */
 .note-container {
     display: flex;
     flex-direction: column;
 }
 
-/* Автор примечания */
 .note-author {
     font-weight: bold;
     margin-bottom: 5px;
+    color: #4a5d73;
 }
 
-/* Возвращаем чередование цветов для строк */
-table tbody tr:nth-child(odd) {
-    background-color: #fff;
+.note-text {
+    font-style: italic;
+    color: #666;
 }
 
-table tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
+/* ================== Интерактивные стили ================== */
 
-/* Делаем курсор-указатель при наведении на строку */
-table tr.clickable-row {
+.reviews-table tr.clickable-row {
+    transition: background-color 0.2s ease;
     cursor: pointer;
 }
 
+.reviews-table tr.clickable-row:hover {
+    background-color: #eef2f5;
+}
+
 /* Удаляем подчеркивание у ссылки */
-table td a {
+.reviews-table td a {
     text-decoration: none;
     color: inherit;
     display: block;
 }
 
-/* Добавляем эффект при наведении на строку */
-table tr.clickable-row:hover {
-    background-color: #e0e0e0;
+/* ================== Адаптивные стили ================== */
+
+@media (max-width: 768px) {
+    .reviews-container {
+        padding: 10px;
+    }
+
+    .reviews-table thead th,
+    .reviews-table td {
+        padding: 10px;
+    }
+
+    .reviews-table thead th:nth-child(2),
+    .reviews-table td:nth-child(2),
+    .reviews-table thead th:nth-child(3),
+    .reviews-table td:nth-child(3) {
+        width: 100px;
+        min-width: 100px;
+    }
+
+    .message-bubble {
+        -webkit-line-clamp: 2;
+    }
 }

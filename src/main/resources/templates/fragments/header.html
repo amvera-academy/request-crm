@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<div th:fragment="header" class="header">
-    <p><span th:text="${username}">username</span></p>
-    <form th:action="@{/logout}" method="post">
-        <button type="submit"> <span class="logout-icon"><i class="fa-solid fa-door-open"></i></span> Выход</button>
-    </form>
+<div th:fragment="header(pageTitle)" class="header-container">
+    <div class="header-content">
+        <h1 th:if="${pageTitle}" th:text="${pageTitle}" class="header-title"></h1>
+        <div class="header-user-info">
+            <p><span th:text="${username}">username</span></p>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit"> <span class="logout-icon"><i class="fa-solid fa-door-open"></i></span> Выход</button>
+            </form>
+        </div>
+    </div>
 </div>
 </html>
