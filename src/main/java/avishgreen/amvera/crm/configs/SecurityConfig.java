@@ -28,8 +28,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-//                    .anyRequest().authenticated()
-                    .anyRequest().permitAll() // Разрешить доступ всем к любым запросам
+                    .anyRequest().authenticated()
+//                    .anyRequest().permitAll() // Разрешить доступ всем к любым запросам
             )
             .formLogin(withDefaults())
             // Добавляем конфигурацию для logout
