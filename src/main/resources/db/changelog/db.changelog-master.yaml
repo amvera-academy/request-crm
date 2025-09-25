@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - preConditions:
+      - dbms:
+          type: postgresql
+  - searchPath: db/changelog
+
+  - changeSet:
+      id: 250917-empty-db
+      author: Avishgreen
+      changes:
+        - tagDatabase:
+            tag: empty-db
+
+
+  - include:
+      file: changelog-001.yaml
+      relativeToChangelogFile: true
+
+  - changeSet:
+      id: 250917-init-db
+      author: Avishgreen
+      changes:
+        - tagDatabase:
+            tag: init_db
+

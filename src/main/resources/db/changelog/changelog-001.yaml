@@ -1,0 +1,97 @@
+databaseChangeLog:
+  - changeSet:
+      id: 250917-table-telegram-users
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 001/up-01-create-table-telegram-users.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 001/dn-01-drop-table-telegram-user.sql
+            relativeToChangeLogFile: "true"
+
+  - changeSet:
+      id: 250917-table-telegram-messages
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 001/up-03-create-table-telegram-messages.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 001/dn-03-drop-table-telegram-messages.sql
+            relativeToChangeLogFile: "true"
+
+  - changeSet:
+      id: 250918-table-support-requests
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 001/up-04-create-table-support-requests.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 001/dn-04-drop-table-support-requests.sql
+            relativeToChangeLogFile: "true"
+
+  - changeSet:
+      id: 250918-table-support-requests-2
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 001/up-05-alter-table-support-requests.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 001/dn-05-alter-table-support-requests.sql
+            relativeToChangeLogFile: "true"
+
+  - changeSet:
+      id: 250918-table-telegram-messages-2
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 001/up-06-alter-table-telegram-messages.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 001/dn-06-alter-table-telegram-messages.sql
+            relativeToChangeLogFile: "true"
+
+  - changeSet:
+      id: 250918-table-support-request-participants
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 001/up-07-create-table-support-request-participants.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 001/dn-07-drop-table-support-request-participants.sql
+            relativeToChangeLogFile: "true"
+
+  - changeSet:
+      id: 250923-table-app-users
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 001/up-09-create-table-app-users.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 001/dn-09-drop-table-app-users.sql
+            relativeToChangeLogFile: "true"
+
+  - changeSet:
+      id: 250923-table-user-notes
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 001/up-11-create-table-user-notes.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 001/dn-11-drop-table-user-notes.sql
+            relativeToChangeLogFile: "true"
+

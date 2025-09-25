@@ -1,8 +1,8 @@
 package avishgreen.amvera.crm.services;
 
-import avishgreen.amvera.crm.dto.SupportMessageDto;
-import avishgreen.amvera.crm.dto.SupportRequestDto;
-import avishgreen.amvera.crm.enums.SupportRequestStatus;
+import avishgreen.amvera.crm.dto.MessageToSupportDto;
+import avishgreen.amvera.crm.dto.RequestToSupportDto;
+import avishgreen.amvera.crm.enums.SupportRequestStatusType;
 import avishgreen.amvera.crm.models.SupportRequestModel;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -14,9 +14,10 @@ import java.util.stream.Collectors;
 
 @Service
 @Getter
-public class ReviewRequestService {
+public class MOCKReviewService {
 
     private List<SupportRequestModel> supportRequestModels;
+
 
     private final Random random = new Random();
     private final List<String> notes = Arrays.asList(
@@ -47,31 +48,31 @@ public class ReviewRequestService {
 
     public List<SupportRequestModel> generateSupportRequests() {
         List<SupportRequestModel> supportRequestModelList = new ArrayList<>();
-        List<SupportRequestStatus> statuses = Arrays.asList(SupportRequestStatus.values());
+        List<SupportRequestStatusType> statuses = Arrays.asList(SupportRequestStatusType.values());
 
         for (long i = 1; i <= 150; i++) {
-            SupportRequestStatus randomStatus;
+            SupportRequestStatusType randomStatus;
 
             // Распределение статусов: 10% на UNANSWERED + REQUIRES_ATTENTION, 90% на остальные (архив)
             int statusRoll = random.nextInt(100);
             if (statusRoll < 5) {
-                randomStatus = SupportRequestStatus.UNANSWERED;
+                randomStatus = SupportRequestStatusType.UNANSWERED;
             } else if (statusRoll < 10) {
-                randomStatus = SupportRequestStatus.REQUIRES_ATTENTION;
+                randomStatus = SupportRequestStatusType.REQUIRES_ATTENTION;
             } else if (statusRoll < 40) { // 30%
-                randomStatus = SupportRequestStatus.COMPLETED;
+                randomStatus = SupportRequestStatusType.COMPLETED;
             } else if (statusRoll < 70) { // 30%
-                randomStatus = SupportRequestStatus.IGNORE;
+                randomStatus = SupportRequestStatusType.IGNORE;
             } else { // 30%
-                randomStatus = SupportRequestStatus.ANSWERED;
+                randomStatus = SupportRequestStatusType.ANSWERED;
             }
 
             String randomNote = notes.get(random.nextInt(notes.size()));
-            List<SupportMessageDto> messages = generateRandomMessages(i);
+            List<MessageToSupportDto> messages = generateRandomMessages(i);
             LocalDateTime lastUpdateTime = findLastMessageTime(messages);
             String author = findInitialAuthor(messages);
             List<String> participants = messages.stream()
-                    .map(SupportMessageDto::author)
+                    .map(MessageToSupportDto::author)
                     .distinct()
                     .filter(participant -> !participant.equals(author))
                     .collect(Collectors.toList());
@@ -89,22 +90,23 @@ public class ReviewRequestService {
         return supportRequestModelList;
     }
 
-    private String findInitialAuthor(List<SupportMessageDto> messages) {
+    
+    private String findInitialAuthor(List<MessageToSupportDto> messages) {
         return messages.stream()
-                .min(Comparator.comparing(SupportMessageDto::timestamp))
-                .map(SupportMessageDto::author)
+                .min(Comparator.comparing(MessageToSupportDto::timestamp))
+                .map(MessageToSupportDto::author)
                 .orElse("unknown");
     }
 
-    private LocalDateTime findLastMessageTime(List<SupportMessageDto> messages) {
+    private LocalDateTime findLastMessageTime(List<MessageToSupportDto> messages) {
         return messages.stream()
-                .map(SupportMessageDto::timestamp)
+                .map(MessageToSupportDto::timestamp)
                 .max(Comparator.naturalOrder())
                 .orElse(LocalDateTime.now());
     }
 
-    private List<SupportMessageDto> generateRandomMessages(long requestId) {
-        List<SupportMessageDto> messages = new ArrayList<>();
+    private List<MessageToSupportDto> generateRandomMessages(long requestId) {
+        List<MessageToSupportDto> messages = new ArrayList<>();
         int messageCount = random.nextInt(3) + 2;
         String[] possibleAuthors = {"user1", "user2", "user3", "admin", "moderator"};
 
@@ -112,7 +114,7 @@ public class ReviewRequestService {
             String text = generateLongMessage();
             LocalDateTime timestamp = LocalDateTime.now().minusHours(random.nextInt(48));
             String author = possibleAuthors[random.nextInt(possibleAuthors.length)];
-            messages.add(new SupportMessageDto(text, timestamp, author));
+            messages.add(new MessageToSupportDto(text, timestamp, author));
         }
         return messages;
     }
@@ -129,7 +131,7 @@ public class ReviewRequestService {
         return sb.toString();
     }
 
-    public void updateRequestStatus(Long id, SupportRequestStatus status) {
+    public void updateRequestStatus(Long id, SupportRequestStatusType status) {
         for (SupportRequestModel request : supportRequestModels) {
             if (request.getId().equals(id)) {
                 request.setStatus(status);
@@ -138,7 +140,7 @@ public class ReviewRequestService {
         }
     }
 
-    public SupportRequestDto getSupportRequestModelById(Long id) {
+    public RequestToSupportDto getSupportRequestModelById(Long id) {
         return supportRequestModels.stream()
                 .filter(request -> request.getId().equals(id))
                 .findFirst()
@@ -146,7 +148,7 @@ public class ReviewRequestService {
                 .orElse(null);
     }
 
-    public List<SupportRequestDto> getPreviousRequestsByAuthor(String author, Long currentRequestId) {
+    public List<RequestToSupportDto> getPreviousRequestsByAuthor(String author, Long currentRequestId) {
         return supportRequestModels.stream()
                 .filter(request -> request.getAuthor().equals(author))
                 .filter(request -> !request.getId().equals(currentRequestId))
@@ -156,29 +158,29 @@ public class ReviewRequestService {
                 .collect(Collectors.toList());
     }
 
-    public List<SupportRequestDto> getRequestsByStatus(SupportRequestStatus status) {
+    public List<RequestToSupportDto> getRequestsByStatus(SupportRequestStatusType status) {
         return supportRequestModels.stream()
                 .filter(request -> request.getStatus() == status)
                 .map(this::mapToSupportRequestDto)
                 .collect(Collectors.toList());
     }
 
-    public List<SupportRequestDto> getArchivedRequests(int limit) {
+    public List<RequestToSupportDto> getArchivedRequests(int limit) {
         return supportRequestModels.stream()
-                .filter(request -> request.getStatus() == SupportRequestStatus.COMPLETED || request.getStatus() == SupportRequestStatus.IGNORE || request.getStatus() == SupportRequestStatus.ANSWERED)
+                .filter(request -> request.getStatus() == SupportRequestStatusType.COMPLETED || request.getStatus() == SupportRequestStatusType.IGNORE || request.getStatus() == SupportRequestStatusType.ANSWERED)
                 .sorted(Comparator.comparing(SupportRequestModel::getLastUpdateTime).reversed())
                 .limit(limit)
                 .map(this::mapToSupportRequestDto)
                 .collect(Collectors.toList());
     }
 
-    private SupportRequestDto mapToSupportRequestDto(SupportRequestModel model) {
-        List<SupportMessageDto> messageDtos = new ArrayList<>(model.getMessages());
-        messageDtos.sort(Comparator.comparing(SupportMessageDto::timestamp).reversed());
+    private RequestToSupportDto mapToSupportRequestDto(SupportRequestModel model) {
+        List<MessageToSupportDto> messageDtos = new ArrayList<>(model.getMessages());
+        messageDtos.sort(Comparator.comparing(MessageToSupportDto::timestamp).reversed());
 
         String initialAuthor = findInitialAuthor(model.getMessages());
 
-        return new SupportRequestDto(
+        return new RequestToSupportDto(
                 model.getId(),
                 messageDtos,
                 initialAuthor,

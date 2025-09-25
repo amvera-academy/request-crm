@@ -1,12 +1,39 @@
 # src/main/resources/application.yml
+spring:
+  application.name: WordsGameSpring
+
+  jpa:
+    defer-datasource-initialization: true
+    show_sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  #      ddl-auto: validate
+        ddl-auto: none
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+
+  liquibase:
+    enabled: false
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+
+
 logging:
   level:
     root: INFO
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
+    org.mapstruct: DEBUG
 server:
   port: 80
 
 spring.security.passwords:
   ivan: ${IVAN_CRM_PASSWORD}
   kirill: ${KIRILL_CRM_PASSWORD}
+  update_passwords: false
+
+telegram:
+  username: ${TELEGRAM_USERNAME}
+  token: ${TELEGRAM_TOKEN}

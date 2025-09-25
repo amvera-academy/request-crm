@@ -28,13 +28,13 @@
             </thead>
             <tbody>
             <tr th:each="request : ${unanswered}"
-                class="clickable-row" th:data-href="@{/support/{id}(id=${request.id})}">
+                class="clickable-row" th:data-href="@{/support-request/{id}(id=${request.id})}">
                 <td class="message-cell">
-                    <a th:href="@{/support/{id}(id=${request.id})}">
+                    <a th:href="@{/support-request/{id}(id=${request.id})}">
                         <div class="message-bubble-container">
                             <span class="message-bubble" th:text="${request.lastMessageText}"></span>
                             <span class="message-timestamp-author">
-                                <span th:text="${#temporals.format(request.lastUpdateTime, 'dd-MM-yyyy HH:mm')}"></span>
+                                <span th:text="${#temporals.format(request.lastMessageAt, 'dd-MM-yyyy HH:mm')}"></span>
                             </span>
                         </div>
                     </a>
@@ -42,8 +42,7 @@
                 <td th:text="${request.status.displayName}"></td>
                 <td>
                     <div class="note-container">
-                        <span th:text="${request.author}" class="note-author"></span>
-                        <span th:text="${request.note}" class="note-text"></span>
+                        <span th:text="${request.information()}" class="note-author"></span>
                     </div>
                 </td>
             </tr>
@@ -63,13 +62,13 @@
             </thead>
             <tbody>
             <tr th:each="request : ${requiresAttention}"
-                class="clickable-row" th:data-href="@{/support/{id}(id=${request.id})}">
+                class="clickable-row" th:data-href="@{/support-request/{id}(id=${request.id})}">
                 <td class="message-cell">
-                    <a th:href="@{/support/{id}(id=${request.id})}">
+                    <a th:href="@{/support-request/{id}(id=${request.id})}">
                         <div class="message-bubble-container">
                             <span class="message-bubble" th:text="${request.lastMessageText}"></span>
                             <span class="message-timestamp-author">
-                                <span th:text="${#temporals.format(request.lastUpdateTime, 'dd-MM-yyyy HH:mm')}"></span>
+                                <span th:text="${#temporals.format(request.lastMessageAt, 'dd-MM-yyyy HH:mm')}"></span>
                             </span>
                         </div>
                     </a>
@@ -77,8 +76,7 @@
                 <td th:text="${request.status.displayName}"></td>
                 <td>
                     <div class="note-container">
-                        <span th:text="${request.author}" class="note-author"></span>
-                        <span th:text="${request.note}" class="note-text"></span>
+                        <span th:text="${request.information()}" class="note-author"></span>
                     </div>
                 </td>
             </tr>
@@ -98,13 +96,13 @@
             </thead>
             <tbody>
             <tr th:each="request : ${archive}"
-                class="clickable-row" th:data-href="@{/support/{id}(id=${request.id})}">
+                class="clickable-row" th:data-href="@{/support-request/{id}(id=${request.id})}">
                 <td class="message-cell">
-                    <a th:href="@{/support/{id}(id=${request.id})}">
+                    <a th:href="@{/support-request/{id}(id=${request.id})}">
                         <div class="message-bubble-container">
                             <span class="message-bubble" th:text="${request.lastMessageText}"></span>
                             <span class="message-timestamp-author">
-                                <span th:text="${#temporals.format(request.lastUpdateTime, 'dd-MM-yyyy HH:mm')}"></span>
+                                <span th:text="${#temporals.format(request.lastMessageAt, 'dd-MM-yyyy HH:mm')}"></span>
                             </span>
                         </div>
                     </a>
@@ -112,8 +110,7 @@
                 <td th:text="${request.status.displayName}"></td>
                 <td>
                     <div class="note-container">
-                        <span th:text="${request.author}" class="note-author"></span>
-                        <span th:text="${request.note}" class="note-text"></span>
+                        <span th:text="${request.information()}" class="note-author"></span>
                     </div>
                 </td>
             </tr>

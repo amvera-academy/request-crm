@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public enum SupportRequestStatus {
+public enum SupportRequestStatusType {
     REQUIRES_ATTENTION("Требует внимания"),
     ANSWERED("Отвечен"),
     UNANSWERED("Не отвечен"),

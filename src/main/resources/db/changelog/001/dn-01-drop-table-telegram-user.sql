@@ -1,0 +1,1 @@
+drop table telegram_users;

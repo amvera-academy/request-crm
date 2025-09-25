@@ -5,16 +5,12 @@ import avishgreen.amvera.crm.enums.SupportRequestStatusType;
 import java.time.Instant;
 import java.util.List;
 
-public record SupportRequestDto(
+public record SupportRequestReviewDto(
         Long id,
         Instant lastMessageAt,
         String lastMessageText,
-        String note,
+        String information,
         Long lastMessageId,
         Long chatId,
-        Long authorId,
-        String authorName,
-        SupportRequestStatusType status,
-        List<TelegramMessageDto> messages,
-        List<String> participantNames
+        SupportRequestStatusType status
 ) {}
