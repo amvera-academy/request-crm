@@ -6,7 +6,7 @@ ADD COLUMN last_message_id BIGINT;
 ALTER TABLE support_requests
 ADD CONSTRAINT fk_last_message
 FOREIGN KEY (last_message_id)
-REFERENCES telegram_messages(id);
+REFERENCES telegram_messages(telegram_message_id);
 
 -- Делаем поле last_message_id уникальным, чтобы реализовать OneToOne
 ALTER TABLE support_requests
