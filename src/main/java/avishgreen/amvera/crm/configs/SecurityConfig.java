@@ -19,8 +19,7 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(
-            HttpSecurity http,
-            DaoAuthenticationProvider daoAuthenticationProvider // Инжектируем явно объявленный провайдер
+            HttpSecurity http
     ) throws Exception {
         http
                 // Настраиваем авторизацию запросов
