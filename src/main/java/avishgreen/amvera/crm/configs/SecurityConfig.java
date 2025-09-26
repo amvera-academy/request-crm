@@ -49,16 +49,19 @@ public class SecurityConfig {
     }
 
     /**
-     * Явное объявление бина DaoAuthenticationProvider с использованием современного Builder-паттерна.
-     * Это устраняет предупреждения об устаревших методах.
-     */
+    * Явное объявление бина DaoAuthenticationProvider.
+    * Использует современный Builder-паттерн для устранения предупреждений об устаревших методах.
+    */
     @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+    public DaoAuthenticationProvider daoAuthenticationProvider(
+            UserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder
+    ) {
         // Использование DaoAuthenticationProvider.builder() заменяет прямой конструктор
-        // и сеттеры, что является современным подходом.
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
-        return provider;
+        // и сеттеры, устраняя предупреждения.
+        return DaoAuthenticationProvider.builder()
+                .userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder)
+                .build();
     }
 }
