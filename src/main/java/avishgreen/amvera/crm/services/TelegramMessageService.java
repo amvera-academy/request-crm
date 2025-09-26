@@ -20,10 +20,25 @@ public class TelegramMessageService {
     @Transactional
     public TelegramMessage saveNewMessage(Message message, User user){
         var sender = userService.getOrCreateIfNeed(user);
+
         // Получаем ID сообщения, на которое был дан ответ
-        Integer replyToMessageId = (message.getReplyToMessage() != null)
-                ? message.getReplyToMessage().getMessageId()
-                : null;
+        Integer replyToMessageId = null;
+        Message repliedMessage = message.getReplyToMessage();
+
+        if (repliedMessage != null) {
+            Integer originalReplyId = repliedMessage.getMessageId();
+
+            // Ищем родительское сообщение в нашей базе
+            Optional<TelegramMessage> existingReply = findByMessageId(originalReplyId);
+
+            if (existingReply.isPresent()) {
+                // Родительское сообщение найдено, можно безопасно на него ссылаться.
+                replyToMessageId = originalReplyId;
+            }
+            // else: Родительское сообщение не найдено.
+            // replyToMessageId останется null, что предотвратит ошибку внешнего ключа.
+            // Это делает текущее сообщение "корневым" в этой цепочке для нашей системы.
+        }
 
         TelegramMessage telegramMessage = TelegramMessage.builder()
                 .telegramMessageId(message.getMessageId())
