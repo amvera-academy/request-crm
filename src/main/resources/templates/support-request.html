@@ -74,14 +74,14 @@
                 <span class="note-label">Мои заметки</span>
                 <button id="save-note-button" class="save-note-button"
                         th:data-author-id="${request.authorId}"
-                        th:data-creator-id="${appUser.id}"
-                        aria-label="Сохранить заметку">
+                        th:data-creator-id="${appUser.id}">
                     <i class="fas fa-save"></i>
                 </button>
             </div>
             <div class="note-value">
                 <textarea id="note-textarea" name="note" rows="5"
-                          th:text="${!myNotes.isEmpty() ? myNotes.get(0).noteText : ''}">
+                          th:text="${!myNotes.isEmpty() ? myNotes.get(0).noteText : ''}"
+                          aria-label="Сохранить заметку">
                 </textarea>
             </div>
         </div>
