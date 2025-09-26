@@ -23,9 +23,12 @@ spring:
 logging:
   level:
     root: INFO
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
     org.mapstruct: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss} %highlight(%-5level) | %-50msg - %-15logger{15}%n"
+
 server:
   port: 80
 
@@ -37,3 +40,4 @@ spring.security.passwords:
 telegram:
   username: ${TELEGRAM_USERNAME}
   token: ${TELEGRAM_TOKEN}
+
