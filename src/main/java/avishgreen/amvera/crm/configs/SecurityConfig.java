@@ -4,6 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
+import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,21 +23,12 @@ public class SecurityConfig {
             DaoAuthenticationProvider daoAuthenticationProvider // Инжектируем явно объявленный провайдер
     ) throws Exception {
         http
-                // 1. Явно регистрируем DaoAuthenticationProvider.
-                .authenticationProvider(daoAuthenticationProvider)
-
-                // 2. Настраиваем авторизацию запросов
+                // Настраиваем авторизацию запросов
                 .authorizeHttpRequests(authorize -> authorize
                         .anyRequest().authenticated() // Все запросы требуют аутентификации
                 )
-                // 3. Настраиваем форму входа
-                .formLogin(form -> form
-                        .permitAll()
-                )
-                // 4. Настраиваем выход (logout)
-                .logout(logout -> logout
-                        .permitAll()
-                );
+                .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
+                .logout(LogoutConfigurer::permitAll);
 
         return http.build();
     }
@@ -46,22 +39,5 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    /**
-    * Явное объявление бина DaoAuthenticationProvider.
-    * Использует современный Builder-паттерн для устранения предупреждений об устаревших методах.
-    */
-    @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
-    ) {
-        // Использование DaoAuthenticationProvider.builder() заменяет прямой конструктор
-        // и сеттеры, устраняя предупреждения.
-        return DaoAuthenticationProvider.builder()
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder)
-                .build();
     }
 }
