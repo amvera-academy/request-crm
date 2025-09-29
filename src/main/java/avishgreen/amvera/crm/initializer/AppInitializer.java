@@ -15,14 +15,14 @@ public class AppInitializer implements CommandLineRunner {
     private final LiquibaseMigration liquibaseMigration;
     private final AppUsersInitializer appUsersInitializer;
 
-    @Value("${spring.security.passwords.ivan}")
+    @Value("${application.passwords.ivan}")
     private String ivanPassword;
 
-    @Value("${spring.security.passwords.kirill}")
+    @Value("${application.passwords.kirill}")
     private String kirillPassword;
 
-    @Value("${app.update.passwords:false}")
-    private boolean updatePasswords;
+    @Value("${application.passwords.latuk}")
+    private String latukPassword;
 
     @Override
     @SneakyThrows
@@ -33,6 +33,9 @@ public class AppInitializer implements CommandLineRunner {
         log.info("Миграция Liquibase завершена.");
 
         // 2. Затем инициализируем пользователей, передав им нужные данные
-        appUsersInitializer.initializeUsers(ivanPassword, kirillPassword, updatePasswords);
+        appUsersInitializer.initializeUsers(ivanPassword, kirillPassword, latukPassword, updatePasswords);
     }
+
+    @Value("${application.update-passwords:false}")
+    private boolean updatePasswords;
 }

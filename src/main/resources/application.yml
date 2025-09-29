@@ -32,10 +32,11 @@ logging:
 server:
   port: 80
 
-spring.security.passwords:
+application.passwords:
   ivan: ${IVAN_CRM_PASSWORD}
   kirill: ${KIRILL_CRM_PASSWORD}
-  update_passwords: false
+  latuk: ${LATUK_CRM_PASSWORD}
+  update-passwords: ${UPDATE_PASSWORDS}
 
 telegram:
   username: ${TELEGRAM_USERNAME}

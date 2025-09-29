@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -20,14 +18,19 @@ public class AppUsersInitializer {
     private final AppUserService appUserService;
 
     // Этот метод теперь принимает пароли извне
-    public void initializeUsers(String ivanPassword, String kirillPassword, boolean updatePasswords) {
+    public void initializeUsers(String ivanPassword,
+                                String kirillPassword,
+                                String latukPassword,
+                                boolean updatePasswords) {
         if (updatePasswords) {
             log.info("Обновление паролей для всех пользователей...");
             updateUserPassword("ivan", ivanPassword);
             updateUserPassword("kirill", kirillPassword);
+            updateUserPassword("latuk", latukPassword);
         }
         createIfNotExist("ivan", ivanPassword);
         createIfNotExist("kirill", kirillPassword);
+        createIfNotExist("latuk", latukPassword);
     }
 
     private void createIfNotExist(String username, String password) {
