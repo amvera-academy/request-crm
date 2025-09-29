@@ -1,0 +1,15 @@
+meta:
+  environment: jvm
+  toolchain:
+    name: gradle
+    version: "21"
+build:
+  image: null
+  args: null
+  artifacts:
+    build/libs/*.jar: /
+run:
+  image: null
+  jarName: main.jar
+  persistenceMount: /data
+  containerPort: "80"
