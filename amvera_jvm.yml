@@ -12,4 +12,4 @@ run:
   image: null
   jarName: AmveraCRM-1.0-SNAPSHOT.jar
   persistenceMount: /data
-  containerPort: "80"
+  containerPort: "8080"
