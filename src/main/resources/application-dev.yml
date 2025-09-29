@@ -1,8 +1,11 @@
 # src/main/resources/application-dev.yml
-isProd: false
-
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/${DB_NAME}
     username: ${DB_USER}
     password: ${DB_PASS}
+
+crm:
+  telegram:
+    # ID пользователя CRM, который представляет нашего Telegram-бота в чате
+    answer-from-bot-id: 7038090633 #wordsGameTestBot

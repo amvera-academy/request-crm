@@ -1,6 +1,7 @@
 package avishgreen.amvera.crm.services;
 
 import avishgreen.amvera.crm.enums.TelegramUpdateType;
+import avishgreen.amvera.crm.services.telegramhandlers.TelegramAnispamHandler;
 import avishgreen.amvera.crm.services.telegramhandlers.TelegramMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,10 +18,17 @@ import java.util.List;
 public class TelegramUpdateReceiverService implements SpringLongPollingBot, LongPollingUpdateConsumer {
     private final String botToken;
     private final TelegramMessageHandler messageHandler;
+    private final TelegramAnispamHandler anispamHandler;
 
-    public TelegramUpdateReceiverService(@Value("${telegram.token}") String botToken, TelegramMessageHandler messageHandler) {
+    // ЯВНЫЙ КОНСТРУКТОР
+    public TelegramUpdateReceiverService(
+            @Value("${telegram.token}") String botToken,
+            TelegramMessageHandler messageHandler,
+            TelegramAnispamHandler anispamHandler
+    ) {
         this.botToken = botToken;
         this.messageHandler = messageHandler;
+        this.anispamHandler = anispamHandler;
     }
 
     @Override
@@ -49,6 +57,12 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
      */
     @Async
     public void handleUpdate(Update update) {
+        //проверим, не спам ли это сообщение
+        var isSpam = anispamHandler.isSpam(update.getUpdateId());
+        if (isSpam) {
+            return;
+        }
+
         var type = TelegramUpdateType.getType(update);
         switch(type){
             case MESSAGE ->  messageHandler.handleMessage(update);//messageHandler.handle(update);

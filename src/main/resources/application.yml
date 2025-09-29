@@ -41,3 +41,8 @@ telegram:
   username: ${TELEGRAM_USERNAME}
   token: ${TELEGRAM_TOKEN}
 
+antispam:
+  api:
+    url: "https://spam-protect-testamvera.amvera.io/api/check"
+    bearer-token: ${ANTISPAM_API_TOKEN}
+

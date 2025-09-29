@@ -18,6 +18,14 @@ public class TelegramMessageService {
     private final TelegramUserService userService;
 
     @Transactional
+    public void saveBotMessage(TelegramMessage message){
+        var sender = userService.getOrCreateBot();
+        message.setSender(sender);
+
+        messageRepository.save(message);
+    }
+
+    @Transactional
     public TelegramMessage saveNewMessage(Message message, User user){
         var sender = userService.getOrCreateIfNeed(user);
 
@@ -56,11 +64,6 @@ public class TelegramMessageService {
     public TelegramMessage updateMessage(TelegramMessage message){
         messageRepository.save(message);
         return message;
-    }
-
-    public Optional<String> getLastMessageText(Long supportRequestId) {
-        return messageRepository.findTopBySupportRequestIdOrderBySentAtDesc(supportRequestId)
-                .map(TelegramMessage::getMessageText);
     }
 
     public TelegramMessage findRootMessage(Integer messageId) {
