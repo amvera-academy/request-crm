@@ -1,5 +1,6 @@
 package avishgreen.amvera.crm.initializer;
 
+import avishgreen.amvera.crm.configs.AppConfig;
 import avishgreen.amvera.crm.entities.AppUser;
 import avishgreen.amvera.crm.repositories.AppUserRepository;
 import avishgreen.amvera.crm.services.AppUserService;
@@ -16,21 +17,21 @@ public class AppUsersInitializer {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final AppUserService appUserService;
+    private final AppConfig appConfig;
+
 
     // Этот метод теперь принимает пароли извне
-    public void initializeUsers(String ivanPassword,
-                                String kirillPassword,
-                                String latukPassword,
-                                boolean updatePasswords) {
-        if (updatePasswords) {
+    public void initializeUsers() {
+        var users = appConfig.getPasswords().getUsers();
+        if (appConfig.getPasswords().getUpdatePasswords()==true) {
             log.info("Обновление паролей для всех пользователей...");
-            updateUserPassword("ivan", ivanPassword);
-            updateUserPassword("kirill", kirillPassword);
-            updateUserPassword("latuk", latukPassword);
+            updateUserPassword("ivan", users.get("ivan"));
+            updateUserPassword("kirill", users.get("kirill"));
+            updateUserPassword("latuk", users.get("latuk"));
         }
-        createIfNotExist("ivan", ivanPassword);
-        createIfNotExist("kirill", kirillPassword);
-        createIfNotExist("latuk", latukPassword);
+        createIfNotExist("ivan", users.get("ivan"));
+        createIfNotExist("kirill", users.get("kirill"));
+        createIfNotExist("latuk", users.get("latuk"));
     }
 
     private void createIfNotExist(String username, String password) {

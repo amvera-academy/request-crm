@@ -23,7 +23,7 @@ public class AppConfig {
     @Setter
     public static class PasswordsProperties {
         private Map<String, String> users; // Или явное перечисление ivan, kirill, latuk
-        private String updatePasswords;
+        private Boolean updatePasswords;
     }
 
     // Вложенный класс для секции 'antispam'

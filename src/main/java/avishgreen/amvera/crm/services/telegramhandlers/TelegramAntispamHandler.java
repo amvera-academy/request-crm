@@ -1,10 +1,10 @@
 package avishgreen.amvera.crm.services.telegramhandlers;
 
+import avishgreen.amvera.crm.configs.AppConfig;
 import avishgreen.amvera.crm.pojo.SpamCheckResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -17,26 +17,21 @@ import java.time.Duration;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class TelegramAnispamHandler {
+public class TelegramAntispamHandler {
     private final RestTemplate restTemplate;
-
-    // Внедрение значений из application.yml
-    @Value("${application.antispam.url}")
-    private String apiUrl;
-
-    @Value("${application.antispam.bearer-token}")
-    private String bearerToken;
+    private final AppConfig appConfig;
 
     @SneakyThrows
     public boolean isSpam(Integer messageId){
         Thread.sleep(Duration.ofSeconds(10));
+        var antispam = appConfig.getAntispam();
 
-        String fullUrl = UriComponentsBuilder.fromUriString(apiUrl)
+        String fullUrl = UriComponentsBuilder.fromUriString(antispam.getUrl())
                 .queryParam("messageId", messageId)
                 .toUriString();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + bearerToken);
+        headers.set("Authorization", "Bearer " + antispam.getBearerToken());
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);

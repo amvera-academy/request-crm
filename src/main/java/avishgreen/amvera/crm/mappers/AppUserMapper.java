@@ -9,7 +9,12 @@ import org.mapstruct.Mapping;
 public interface AppUserMapper {
 
     @Mapping(target = "passwordHash", ignore = true)
+    @Mapping(target = "isAccountNonExpired", ignore = true)
+    @Mapping(target = "isAccountNonLocked", ignore = true)
+    @Mapping(target = "isCredentialsNonExpired", ignore = true)
+    @Mapping(target = "isEnabled", ignore = true)
     AppUser toEntity(AppUserDto appUserDto);
 
+    @Mapping(target = "createdAt", ignore = true)
     AppUserDto toDto(AppUser appUser);
 }

@@ -38,7 +38,7 @@ application:
       ivan: ${IVAN_CRM_PASSWORD}
       kirill: ${KIRILL_CRM_PASSWORD}
       latuk: ${LATUK_CRM_PASSWORD}
-    update-passwords: ${UPDATE_PASSWORDS}
+    update-passwords: ${UPDATE_PASSWORDS:false}
 
   antispam:
     url: "https://spam-protect-testamvera.amvera.io/api/check"
