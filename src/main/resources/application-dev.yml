@@ -5,3 +5,5 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASS}
 
+server:
+  port: 80
