@@ -1,6 +1,6 @@
 package avishgreen.amvera.crm.services;
 
-import avishgreen.amvera.crm.configs.TelegramBotConfig;
+import avishgreen.amvera.crm.configs.AppConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
@@ -33,8 +33,8 @@ public class TelegramApiService {
     private final TelegramClient telegramClient;
 
 
-    public TelegramApiService(TelegramBotConfig botConfig){
-        this.telegramClient = new OkHttpTelegramClient(botConfig.getToken());
+    public TelegramApiService(AppConfig appConfig) {
+        this.telegramClient = new OkHttpTelegramClient(appConfig.getTelegram().getToken());
     }
 
 
