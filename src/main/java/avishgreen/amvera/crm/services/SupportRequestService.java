@@ -59,6 +59,12 @@ public class SupportRequestService {
         TelegramUser sender = userService.getOrCreateIfNeed(user);
         TelegramMessage telegramMessage = messageService.saveNewMessage(message, user);
 
+        // Если сообщение уже привязано к заявке, просто возвращаем ее.
+        if (telegramMessage.getSupportRequest() != null) {
+            // Мы уже обработали это сообщение. Возвращаем существующую заявку.
+            return telegramMessage.getSupportRequest();
+        }
+
         SupportRequest supportRequest;
 
         if (message.getReplyToMessage() != null) {
@@ -94,7 +100,7 @@ public class SupportRequestService {
 
         // Обновление обращения
         telegramMessage.setSupportRequest(supportRequest);
-        telegramMessage = messageService.updateMessage(telegramMessage);
+//        telegramMessage = messageService.updateMessage(telegramMessage);
 
         supportRequest.getMessages().add(telegramMessage);
         supportRequest.setLastMessageAt(telegramMessage.getSentAt());

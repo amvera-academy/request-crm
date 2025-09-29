@@ -24,6 +24,7 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
 
     @Override
     public String getBotToken() {
+//        log.info(appConfig.getTelegram().getToken());
         return appConfig.getTelegram().getToken();
     }
 

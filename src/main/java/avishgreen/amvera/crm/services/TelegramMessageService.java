@@ -48,15 +48,24 @@ public class TelegramMessageService {
             // Это делает текущее сообщение "корневым" в этой цепочке для нашей системы.
         }
 
-        TelegramMessage telegramMessage = TelegramMessage.builder()
-                .telegramMessageId(message.getMessageId())
-                .messageText(message.getText())
-                .sentAt(Instant.now())
-                .sender(sender)
-                .chatId(message.getChatId())
-                .replyToMessageId(replyToMessageId) // Сохраняем ID ответа
-                .build();
+        //Проверяем, существует ли сообщение уже в базе
+        TelegramMessage telegramMessage;
+        Optional<TelegramMessage> existingMessage = findByMessageId(message.getMessageId());
+        if (existingMessage.isEmpty()) {
+            telegramMessage = TelegramMessage.builder()
+                    .telegramMessageId(message.getMessageId())
+                    .messageText(message.getText())
+                    .sentAt(Instant.now())
+                    .sender(sender)
+                    .chatId(message.getChatId())
+                    .replyToMessageId(replyToMessageId) // Сохраняем ID ответа
+                    .build();
+
+        }else{
+            telegramMessage = existingMessage.get();
+        }
         messageRepository.save(telegramMessage);
+
         return telegramMessage;
     }
 
