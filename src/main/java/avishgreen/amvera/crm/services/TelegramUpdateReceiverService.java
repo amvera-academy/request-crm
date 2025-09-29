@@ -47,7 +47,6 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
      * Центральный метод для обработки всех типов обновлений.
      * @param update Объект обновления Telegram.
      */
-    @Async
     public void handleUpdate(Update update) {
         //проверим, не спам ли это сообщение
         var isSpam = antispamHandler.isSpam(update.getUpdateId());
