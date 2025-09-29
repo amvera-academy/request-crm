@@ -26,7 +26,7 @@ public class TelegramMessageHandler {
         requestService.processNewMessage(message, user);
 
 
-        log.info("Received Update {}", message.getText());
+//        log.info("Received Update {}", message.getText());
     }
 
 /*

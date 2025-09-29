@@ -37,7 +37,7 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
     public void consume(List<Update> updates) {
         updates.forEach(update ->
             {
-                log.debug("UPDATE received. Id {}", update.getUpdateId());
+                log.info("UPDATE received. Id {}", update.getUpdateId());
                 handleUpdate(update);
             }
         );
@@ -51,6 +51,7 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
         //проверим, не спам ли это сообщение
         var isSpam = antispamHandler.isSpam(update.getUpdateId());
         if (isSpam) {
+            log.warn("SPAM received. Id {}. SKIPPED", update.getUpdateId());
             return;
         }
 
