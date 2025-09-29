@@ -22,7 +22,7 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
 
     // ЯВНЫЙ КОНСТРУКТОР
     public TelegramUpdateReceiverService(
-            @Value("${telegram.token}") String botToken,
+            @Value("${application.telegram.token}") String botToken,
             TelegramMessageHandler messageHandler,
             TelegramAnispamHandler anispamHandler
     ) {

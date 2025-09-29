@@ -21,10 +21,10 @@ public class TelegramAnispamHandler {
     private final RestTemplate restTemplate;
 
     // Внедрение значений из application.yml
-    @Value("${antispam.api.url}")
+    @Value("${application.antispam.url}")
     private String apiUrl;
 
-    @Value("${antispam.api.bearer-token}")
+    @Value("${application.antispam.bearer-token}")
     private String bearerToken;
 
     @SneakyThrows

@@ -32,18 +32,19 @@ logging:
 server:
   port: 80
 
-application.passwords:
-  ivan: ${IVAN_CRM_PASSWORD}
-  kirill: ${KIRILL_CRM_PASSWORD}
-  latuk: ${LATUK_CRM_PASSWORD}
-  update-passwords: ${UPDATE_PASSWORDS}
+application:
+  passwords:
+    ivan: ${IVAN_CRM_PASSWORD}
+    kirill: ${KIRILL_CRM_PASSWORD}
+    latuk: ${LATUK_CRM_PASSWORD}
+    update-passwords: ${UPDATE_PASSWORDS}
 
-telegram:
-  username: ${TELEGRAM_USERNAME}
-  token: ${TELEGRAM_TOKEN}
-
-antispam:
-  api:
+  antispam:
     url: "https://spam-protect-testamvera.amvera.io/api/check"
     bearer-token: ${ANTISPAM_API_TOKEN}
+
+  telegram:
+    username: ${TELEGRAM_USERNAME}
+    token: ${TELEGRAM_TOKEN}
+
 
