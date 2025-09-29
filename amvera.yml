@@ -1,16 +1,17 @@
+version: null
 meta:
-  environment: jvm
+  environment: docker
   toolchain:
-    name: gradle
+    name: docker
     version: "21"
 build:
   image: null
   args: null
   artifacts:
     build/libs/*.jar: /
+  dockerfile: Dockerfile
 run:
   image: null
   jarName: AmveraCRM-1.0-SNAPSHOT.jar
   persistenceMount: /data
-  containerPort: "80"
-  servicePort: "80"
+  containerPort: "8080"
