@@ -34,9 +34,10 @@ server:
 
 application:
   passwords:
-    ivan: ${IVAN_CRM_PASSWORD}
-    kirill: ${KIRILL_CRM_PASSWORD}
-    latuk: ${LATUK_CRM_PASSWORD}
+    users:
+      ivan: ${IVAN_CRM_PASSWORD}
+      kirill: ${KIRILL_CRM_PASSWORD}
+      latuk: ${LATUK_CRM_PASSWORD}
     update-passwords: ${UPDATE_PASSWORDS}
 
   antispam:
