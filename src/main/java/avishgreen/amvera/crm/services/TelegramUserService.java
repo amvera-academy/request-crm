@@ -1,5 +1,6 @@
 package avishgreen.amvera.crm.services;
 
+import avishgreen.amvera.crm.configs.AppConfig;
 import avishgreen.amvera.crm.entities.TelegramUser;
 import avishgreen.amvera.crm.repositories.TelegramUserRepository;
 import lombok.NonNull;
@@ -19,10 +20,28 @@ import java.time.temporal.ChronoUnit;
 public class TelegramUserService {
 
     private final TelegramUserRepository telegramUserRepository;
-    @Value("${crm.telegram.answer-from-bot-id}")
-    private Long crmBotUserId;
+    private final AppConfig appConfig;
 
     public TelegramUser getOrCreateBot(){
+        var token = appConfig.getTelegram().getToken();
+        // Переменная для хранения ID пользователя бота
+        Long crmBotUserId;
+
+        // Проверяем, что токен не пустой и содержит разделитель (двоеточие)
+        if (token != null && token.contains(":")) {
+            // Используем метод split(), чтобы разделить строку по первому двоеточию
+            String[] parts = token.split(":", 2); // Ограничиваем разделение одним двоеточием
+
+            // ID пользователя бота будет первой частью (индекс 0)
+            crmBotUserId = Long.valueOf(parts[0]);
+        }else {
+            crmBotUserId = null;
+        }
+
+        if (crmBotUserId == null){
+            throw new RuntimeException("CRM bot user id not found");
+        }
+
         return telegramUserRepository.findById(crmBotUserId)
                 .orElseGet(() -> {
 

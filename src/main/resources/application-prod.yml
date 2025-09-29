@@ -5,8 +5,3 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASS}
 
-
-crm:
-  telegram:
-    # ID пользователя CRM, который представляет нашего Telegram-бота в чате
-    answer-from-bot-id: 8234682964 #amveraCRMBot
