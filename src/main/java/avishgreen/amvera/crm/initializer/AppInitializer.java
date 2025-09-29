@@ -1,6 +1,5 @@
 package avishgreen.amvera.crm.initializer;
 
-import avishgreen.amvera.crm.configs.AppConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +26,4 @@ public class AppInitializer implements CommandLineRunner {
         // инициализируем пользователей, передав им нужные данные
         appUsersInitializer.initializeUsers();
     }
-
-    @Value("${application.update-passwords:false}")
-    private boolean updatePasswords;
 }
