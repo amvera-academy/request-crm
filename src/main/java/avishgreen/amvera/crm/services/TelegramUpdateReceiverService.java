@@ -19,7 +19,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TelegramUpdateReceiverService implements SpringLongPollingBot, LongPollingUpdateConsumer {
     private final TelegramMessageHandler messageHandler;
-    private final TelegramAntispamHandler antispamHandler;
     private final AppConfig appConfig;
 
     @Override
@@ -48,13 +47,6 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
      * @param update Объект обновления Telegram.
      */
     public void handleUpdate(Update update) {
-        //проверим, не спам ли это сообщение
-        var messageId = update.getMessage().getMessageId();
-        var isSpam = antispamHandler.isSpam(messageId);
-        if (isSpam) {
-            log.warn("SPAM received. Id {}. SKIPPED", messageId);
-            return;
-        }
 
         var type = TelegramUpdateType.getType(update);
         switch(type){

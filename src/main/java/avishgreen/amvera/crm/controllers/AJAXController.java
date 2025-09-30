@@ -1,6 +1,7 @@
 package avishgreen.amvera.crm.controllers;
 
 import avishgreen.amvera.crm.dto.SendMessageRequestDto;
+import avishgreen.amvera.crm.dto.SupportRequestReviewDto;
 import avishgreen.amvera.crm.dto.UserNoteDto;
 import avishgreen.amvera.crm.enums.SupportRequestStatusType;
 import avishgreen.amvera.crm.services.ReviewService;
@@ -11,11 +12,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -81,4 +84,23 @@ public class AJAXController {
         }
     }
 
+    @GetMapping("/request-reviews/unanswered-fragment")
+    public String getUnansweredRequestsFragment(Model model) {
+        // Используем существующий сервисный метод
+        List<SupportRequestReviewDto> unanswered = reviewService.getUnansweredRequests();
+
+        // Передаем данные в шаблон
+        model.addAttribute("unanswered", unanswered);
+
+        // Возвращаем имя фрагмента для рендеринга
+        // Синтаксис: "название_файла :: название_фрагмента"
+        return "fragments/unanswered-requests :: unansweredListFragment";
+    }
+
+    // Возвращает счетчик неотвеченных сообщений
+    @GetMapping("/request-reviews/unanswered-count")
+    @ResponseBody // Важно! Возвращаем чистый объект (число)
+    public int getUnansweredRequestsCount() {
+        return reviewService.getUnansweredRequests().size();
+    }
 }

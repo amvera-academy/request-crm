@@ -17,11 +17,20 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class TelegramMessageHandler {
 
     private final SupportRequestService requestService;
+    private final TelegramAntispamHandler antispamHandler;
 
     public void handleMessage(Update update)  {
         if (!update.hasMessage()) throw new RuntimeException("Update has no message!");
         var message = update.getMessage();
         var user = message.getFrom();
+
+        //проверим, не спам ли это сообщение
+        var messageId = message.getMessageId();
+        var isSpam = antispamHandler.isSpam(messageId);
+        if (isSpam) {
+            log.warn("SPAM message received. Id {}. SKIPPED", messageId);
+            return;
+        }
 
         requestService.processNewMessage(message, user);
 

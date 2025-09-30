@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
     <script type="module" th:src="@{/js/global.js}"></script>
+    <script th:src="@{/js/unanswered-updater.js}"></script> </head>
 </head>
 <body>
 <div th:replace="~{fragments/header :: header(pageTitle=${pageTitle})}"></div>
@@ -17,38 +18,9 @@
         <p>На данный момент нет обращений.</p>
     </div>
 
-    <div th:if="${!unanswered.isEmpty()}">
-        <h2 class="group-header-text">Неотвеченные</h2>
-        <table class="reviews-table">
-            <thead>
-            <tr>
-                <th>Сообщение</th>
-                <th>Статус</th>
-                <th>Информация</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="request : ${unanswered}"
-                class="clickable-row" th:data-href="@{/support-request/{id}(id=${request.id})}">
-                <td class="message-cell">
-                    <a th:href="@{/support-request/{id}(id=${request.id})}">
-                        <div class="message-bubble-container">
-                            <span class="message-bubble" th:text="${request.lastMessageText}"></span>
-                            <span class="message-timestamp-author">
-                                <span th:text="${#temporals.format(request.lastMessageAt, 'dd-MM-yyyy HH:mm')}"></span>
-                            </span>
-                        </div>
-                    </a>
-                </td>
-                <td th:text="${request.status.displayName}"></td>
-                <td>
-                    <div class="note-container">
-                        <span th:text="${request.information()}" class="note-author"></span>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+    <div id="unanswered-requests-container">
+        <div th:replace="~{fragments/unanswered-requests :: unansweredListFragment(unanswered=${unanswered})}">
+        </div>
     </div>
 
     <div th:if="${!requiresAttention.isEmpty()}">
