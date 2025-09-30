@@ -20,6 +20,7 @@ import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 /**
@@ -135,6 +136,31 @@ public class TelegramApiService {
     public Message executeSendMessage(SendMessage sendMessage) {
         try {
             return telegramClient.execute(sendMessage);
+        } catch (TelegramApiRequestException e) {
+            // Проверяем, является ли ошибка "Bad Request" (код 400)
+            if (e.getErrorCode() == 400) {
+
+                // Проверяем не удалено ли сообщение
+                final String messageNotFound = "message to be replied not found";
+
+                if (e.getApiResponse().contains(messageNotFound)) {
+
+                    // Это специфическая ошибка "сообщение удалено".
+                    log.warn("Failed to send reply to chat {}. Reason: Message to be replied was deleted.",
+                            sendMessage.getChatId());
+
+                    // Создаем и выбрасываем более информативное исключение
+                    // Мы используем IllegalArgumentException, чтобы указать на проблему с входными данными.
+                    throw new IllegalArgumentException(
+                            "Невозможно отправить ответ. Исходное сообщение пользователя было удалено.", e);
+                }
+            }
+
+            // Если это другая ошибка API (например, "Chat not found"), перебрасываем ее или логируем
+            log.error("Failed to send message to chat {} due to Telegram API request error.",
+                    sendMessage.getChatId(), e);
+            return null;
+            //throw e; // Перебрасываем API-ошибку для обработки на более высоком уровне
         } catch (TelegramApiException e) {
             log.error("Failed to send message to chat {}", sendMessage.getChatId(), e);
             // Можно добавить более сложную логику обработки ошибок, например, повторные попытки

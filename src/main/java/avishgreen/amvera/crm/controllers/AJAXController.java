@@ -58,7 +58,7 @@ public class AJAXController {
      */
     @PostMapping("/support-request/answer-to-request")
     @ResponseBody
-    public ResponseEntity<Void> sendResponseToUser(@RequestBody SendMessageRequestDto dto) {
+    public ResponseEntity<?> sendResponseToUser(@RequestBody SendMessageRequestDto dto) {
         log.info("Received request to send message for SupportRequest ID: {}", dto.supportRequestId());
 
         // Используем поля record (supportRequestId() и text())
@@ -69,8 +69,15 @@ public class AJAXController {
 
         } catch (IllegalArgumentException e) {
             // Если обращение не найдено или другие ошибки данных
-            log.warn("Failed to send message: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "message_deleted");
+            errorResponse.put("message", e.getMessage()); // Используем сообщение из исключения
+
+            // Возвращаем 400 Bad Request с телом JSON
+            return ResponseEntity
+                    .badRequest()
+                    .body(errorResponse); // браузер получит JSON с причиной
+//            return ResponseEntity.badRequest().build();
 
         } catch (TelegramApiException e) {
             // Если возникла проблема с API Telegram (например, неправильный Chat ID)

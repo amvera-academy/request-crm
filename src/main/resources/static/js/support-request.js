@@ -2,7 +2,7 @@
 
 import { authenticatedFetch } from './global.js'; // Импорт утилиты
 
-// --- Логика сохранения заметок ---
+// --- Логика сохранения заметок (Без изменений) ---
 function initializeNoteSaving() {
     const saveButton = document.getElementById('save-note-button');
     const noteTextarea = document.getElementById('note-textarea');
@@ -43,15 +43,16 @@ function initializeNoteSaving() {
 }
 
 
-// --- Логика отправки ответного сообщения ---
+// --- Логика отправки ответного сообщения (ОБНОВЛЕННАЯ ВЕРСИЯ) ---
 function initializeMessageSending() {
     const sendButton = document.getElementById('send-message-button');
-    const formContainer = document.getElementById('send-message-form'); // Используем контейнер с data-request-id
+    const formContainer = document.getElementById('send-message-form');
     const messageTextInput = document.getElementById('message-text-input');
 
     if (!sendButton || !formContainer || !messageTextInput) return;
 
-    sendButton.addEventListener('click', function() {
+    // Используем async/await для более удобной работы с чтением тела ответа
+    sendButton.addEventListener('click', async function() { // <-- Добавляем async
         const messageText = messageTextInput.value.trim();
         const supportRequestId = formContainer.getAttribute('data-request-id');
 
@@ -65,24 +66,43 @@ function initializeMessageSending() {
             text: messageText
         };
 
-        authenticatedFetch('/support-request/answer-to-request', {
-            method: 'POST',
-            body: JSON.stringify(requestData)
-        })
-            .then(response => {
-                if (response.ok) {
-                    alert('Сообщение успешно отправлено!');
-                    messageTextInput.value = ''; // Очистка поля
-                    // 💡 Идея: После успешной отправки можно сделать AJAX-запрос
-                    // для обновления истории сообщений без перезагрузки страницы.
-                } else {
-                    alert('Ошибка отправки сообщения. Сервер вернул ошибку.');
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Ошибка сети или сервера при отправке сообщения.');
+        try {
+            const response = await authenticatedFetch('/support-request/answer-to-request', { // <-- await
+                method: 'POST',
+                body: JSON.stringify(requestData)
             });
+
+            if (response.ok) {
+                alert('Сообщение успешно отправлено!');
+                messageTextInput.value = ''; // Очистка поля
+                // Здесь можно добавить AJAX-обновление истории сообщений
+
+            } else {
+                // Обработка ошибок сервера (4xx, 5xx)
+                let errorMessage = `Ошибка отправки сообщения. Сервер вернул статус ${response.status}.`;
+
+                // КЛЮЧЕВАЯ ЛОГИКА: Читаем JSON-тело для получения точной причины (если оно есть)
+                if (response.status >= 400) {
+                    try {
+                        const errorData = await response.json();
+
+                        if (errorData && errorData.message) {
+                            // Если JSON содержит поле 'message' (отправленное из Java-контроллера)
+                            errorMessage = errorData.message;
+                        }
+                    } catch (e) {
+                        // Игнорируем ошибку парсинга, если тело не JSON
+                        console.warn("Не удалось прочитать специфическое JSON-сообщение об ошибке:", e);
+                    }
+                }
+
+                alert(errorMessage);
+            }
+        } catch (error) {
+            // Ошибка сети или ошибка, брошенная самим authenticatedFetch
+            console.error('Ошибка:', error);
+            alert('Ошибка сети или сервера при отправке сообщения.');
+        }
     });
 }
 
