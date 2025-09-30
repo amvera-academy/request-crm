@@ -51,10 +51,11 @@ public class TelegramMessageService {
         //Проверяем, существует ли сообщение уже в базе
         TelegramMessage telegramMessage;
         Optional<TelegramMessage> existingMessage = findByMessageId(message.getMessageId());
+        var messageText = message.getText()==null?"[картинка]":message.getText();
         if (existingMessage.isEmpty()) {
             telegramMessage = TelegramMessage.builder()
                     .telegramMessageId(message.getMessageId())
-                    .messageText(message.getText())
+                    .messageText(messageText)
                     .sentAt(Instant.now())
                     .sender(sender)
                     .chatId(message.getChatId())
