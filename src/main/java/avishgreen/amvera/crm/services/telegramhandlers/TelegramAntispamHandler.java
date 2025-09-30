@@ -47,7 +47,7 @@ public class TelegramAntispamHandler {
 
             // проверим статус ответа и тело
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                log.info("Anti-spam check for message {} successful. Spam status: {}", messageId, response.getBody().isSpam());
+                log.debug("Anti-spam check for message {} successful. Spam status: {}", messageId, response.getBody().isSpam());
                 return response.getBody().isSpam();
             }
 

@@ -37,7 +37,7 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
     public void consume(List<Update> updates) {
         updates.forEach(update ->
             {
-                log.info("UPDATE received. Id {}", update.getUpdateId());
+//                log.info("UPDATE received. Id {}", update.getUpdateId());
                 handleUpdate(update);
             }
         );
