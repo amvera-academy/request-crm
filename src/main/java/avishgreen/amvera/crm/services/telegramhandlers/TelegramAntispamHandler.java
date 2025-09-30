@@ -23,7 +23,7 @@ public class TelegramAntispamHandler {
 
     @SneakyThrows
     public boolean isSpam(Integer messageId){
-        Thread.sleep(Duration.ofSeconds(30));
+        Thread.sleep(Duration.ofSeconds(5));
         var antispam = appConfig.getAntispam();
 
         String fullUrl = UriComponentsBuilder.fromUriString(antispam.getUrl())

@@ -49,9 +49,10 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
      */
     public void handleUpdate(Update update) {
         //проверим, не спам ли это сообщение
-        var isSpam = antispamHandler.isSpam(update.getUpdateId());
+        var messageId = update.getMessage().getMessageId();
+        var isSpam = antispamHandler.isSpam(messageId);
         if (isSpam) {
-            log.warn("SPAM received. Id {}. SKIPPED", update.getUpdateId());
+            log.warn("SPAM received. Id {}. SKIPPED", messageId);
             return;
         }
 
