@@ -49,15 +49,7 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
     public void handleUpdate(Update update) {
 
         var type = TelegramUpdateType.getType(update);
-        Integer messageId=null;
-        try {
-            messageId = update.getMessage().getMessageId();
-        }catch (Exception ex){
-            log.error("Update %s has no message. Error %s"
-                    .formatted(update.getUpdateId()
-                            ,ex.getMessage()),ex);
-        }
-        log.info("Received Update Type: {} for message {}", type, messageId);
+        log.info("Received Update Type: {}", type);
         switch(type){
             case MESSAGE ->  messageHandler.handleMessage(update);//messageHandler.handle(update);
             case CALLBACK_QUERY -> {}//callbackQueryHandler.handle(update);

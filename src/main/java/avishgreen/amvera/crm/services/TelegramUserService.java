@@ -66,7 +66,9 @@ public class TelegramUserService {
     @Transactional
     public TelegramUser getOrCreateIfNeed(@NonNull User user) {
         var userId = user.getId();
-        var telegramUser = telegramUserRepository.findById(userId)
+        //используем блокирующий метод, чтобы пока не обработалось предыдущее сообщение
+        //от пользователя все новые сообщения от него впадали в сон до конца обработки
+        var telegramUser = telegramUserRepository.findAndLockById(userId)
                 .orElseGet(() -> updateUserData(user));
 
         if (telegramUser.getLastActivity().isBefore(Instant.now().minus(1, ChronoUnit.DAYS))) {

@@ -26,13 +26,16 @@ public class TelegramMessageHandler {
 
         //проверим, не спам ли это сообщение
         var messageId = message.getMessageId();
+        log.info("antispam started");
         var isSpam = antispamHandler.isSpam(messageId);
+        log.info("antispam finished");
         if (isSpam) {
             log.warn("SPAM message received. Id {}. SKIPPED", messageId);
             return;
         }
-
+        log.info("process new message {}", messageId);
         requestService.processNewMessage(message, user);
+        log.info("process new message finished");
 
 
 //        log.info("Received Update {}", message.getText());
