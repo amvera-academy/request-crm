@@ -75,6 +75,7 @@ function initializeMessageSending() {
             if (response.ok) {
                 alert('Сообщение успешно отправлено!');
                 messageTextInput.value = ''; // Очистка поля
+                window.location.reload();
                 // Здесь можно добавить AJAX-обновление истории сообщений
 
             } else {

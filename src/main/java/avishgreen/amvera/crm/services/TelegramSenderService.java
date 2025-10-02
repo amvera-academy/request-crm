@@ -2,6 +2,7 @@ package avishgreen.amvera.crm.services;
 
 import avishgreen.amvera.crm.entities.SupportRequest;
 import avishgreen.amvera.crm.entities.TelegramMessage;
+import avishgreen.amvera.crm.enums.SupportRequestStatusType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -61,7 +62,7 @@ public class TelegramSenderService {
         Integer finalReplyToMessageId = null;
         int successfullyTriedCount = 0;
 
-        // 2. ИТЕРИРУЕМ по сообщениям, пока не найдем рабочее
+        // ИТЕРИРУЕМ по сообщениям, пока не найдем рабочее
         for (TelegramMessage userMessage : userMessages) {
             Integer currentReplyId = userMessage.getTelegramMessageId();
 
@@ -75,7 +76,7 @@ public class TelegramSenderService {
                 break;
 
             } catch (IllegalArgumentException e) {
-                // 3. Поймали ошибку: сообщение с ID currentReplyId удалено.
+                // Поймали ошибку: сообщение с ID currentReplyId удалено.
                 // Эта ошибка выбрасывается из TelegramApiService при 400 Bad Request.
                 log.warn("Message ID {} was deleted. Trying previous message...", currentReplyId);
                 successfullyTriedCount++;
@@ -89,7 +90,7 @@ public class TelegramSenderService {
             }
         }
 
-        // 5. Проверка результата после цикла
+        // Проверка результата после цикла
         if (sentMessage != null) {
             // Успешно отправлено: сохраняем в БД
             TelegramMessage crmMessage = new TelegramMessage();
@@ -110,5 +111,11 @@ public class TelegramSenderService {
             throw new IllegalArgumentException(
                     "Невозможно отправить ответ. Все сообщения пользователя в этом обращении были удалены.");
         }
+
+        //после отправки ответа установим статус отвечен если это нужно
+        if(request.getStatus().equals(SupportRequestStatusType.UNANSWERED)){
+            request.setStatus(SupportRequestStatusType.ANSWERED);
+        }
+
     }
 }
