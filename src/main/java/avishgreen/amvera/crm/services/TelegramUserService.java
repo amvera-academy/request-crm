@@ -6,6 +6,7 @@ import avishgreen.amvera.crm.repositories.TelegramUserRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import java.time.temporal.ChronoUnit;
 @Service
 @Setter
 @RequiredArgsConstructor
+@Slf4j
 public class TelegramUserService {
 
     private final TelegramUserRepository telegramUserRepository;
@@ -69,7 +71,10 @@ public class TelegramUserService {
         //используем блокирующий метод, чтобы пока не обработалось предыдущее сообщение
         //от пользователя все новые сообщения от него впадали в сон до конца обработки
         var telegramUser = telegramUserRepository.findAndLockById(userId)
-                .orElseGet(() -> updateUserData(user));
+                .orElseGet(() -> {
+                    log.info("User not found. Id {}",userId);
+                    return updateUserData(user);
+                });
 
         if (telegramUser.getLastActivity().isBefore(Instant.now().minus(1, ChronoUnit.DAYS))) {
             updateUserData(user);
@@ -89,6 +94,7 @@ public class TelegramUserService {
                 .lastUpdated(Instant.now())
                 .build();
         telegramUserRepository.save(telegramUser);
+        log.info("Created new user. Id {}",user.getId());
         return telegramUser;
     }
 
