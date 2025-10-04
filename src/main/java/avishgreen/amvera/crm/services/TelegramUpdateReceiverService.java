@@ -62,7 +62,8 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
         var i=0;
         if(!switchResult){
             log.info("Received unhandled Update Type: {}", type);
-        }else{i++;//do nothing}
+        }else{i++;//do nothing
+             }
 
     }
 }
