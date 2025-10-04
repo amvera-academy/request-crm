@@ -1,20 +1,21 @@
 package avishgreen.amvera.crm.services;
 
 import avishgreen.amvera.crm.entities.SupportRequest;
-import avishgreen.amvera.crm.entities.TelegramUser;
 import avishgreen.amvera.crm.entities.TelegramMessage;
+import avishgreen.amvera.crm.entities.TelegramUser;
 import avishgreen.amvera.crm.enums.SupportRequestStatusType;
 import avishgreen.amvera.crm.repositories.SupportRequestRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Comparator;
 import java.util.Set;
 
 @Service
@@ -44,9 +45,9 @@ public class SupportRequestService {
             request.getMessages().forEach(message -> {
                 // Инициализируем отправителя для каждого сообщения
                 if (message.getSender() != null) {
-                    // Hibernate.initialize(message.getSender()); // Если вы используете пакет Hibernate
+                    Hibernate.initialize(message.getSender());
                     // Или просто вызов getter'а, чтобы инициировать загрузку:
-                    message.getSender().getFirstName();
+//                    message.getSender().getFirstName();
                 }
             });
 //        }

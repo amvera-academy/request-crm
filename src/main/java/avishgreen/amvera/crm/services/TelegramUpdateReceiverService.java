@@ -2,11 +2,9 @@ package avishgreen.amvera.crm.services;
 
 import avishgreen.amvera.crm.configs.AppConfig;
 import avishgreen.amvera.crm.enums.TelegramUpdateType;
-import avishgreen.amvera.crm.services.telegramhandlers.TelegramAntispamHandler;
 import avishgreen.amvera.crm.services.telegramhandlers.TelegramMessageHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
@@ -34,12 +32,7 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
 
     @Override
     public void consume(List<Update> updates) {
-        updates.forEach(update ->
-            {
-//                log.info("UPDATE received. Id {}", update.getUpdateId());
-                handleUpdate(update);
-            }
-        );
+        updates.forEach(this::handleUpdate);
     }
 
     /**
@@ -49,16 +42,27 @@ public class TelegramUpdateReceiverService implements SpringLongPollingBot, Long
     public void handleUpdate(Update update) {
 
         var type = TelegramUpdateType.getType(update);
-        log.info("Received Update Type: {}", type);
-        switch(type){
-            case MESSAGE ->  messageHandler.handleMessage(update);//messageHandler.handle(update);
-            case CALLBACK_QUERY -> {}//callbackQueryHandler.handle(update);
-            case CHAT_MEMBER -> {}//handleChatMember(update);
-            case MY_CHAT_MEMBER -> {}//handleMyChatMember(update);
-            case CHANNEL_POST -> {}
-            //default не будем делать, чтобы компилятор проверял полноту обработки этого енум
-    //            default -> log.warn("UNSUPPORTED type of telegram update received! %s".formatted(type));
-        }
+
+        boolean switchResult = switch(type){
+            case MESSAGE -> {
+                messageHandler.handleMessage(update);
+                yield true;
+            }
+            case CALLBACK_QUERY,
+                 CHAT_MEMBER,
+                 MY_CHAT_MEMBER,
+                 CHANNEL_POST,
+                 EDITED_MESSAGE,
+                 INLINE_QUERY,
+                 UNKNOWN -> {
+                yield false;
+                //callbackQueryHandler.handle(update);
+            }
+        };
+        var i=0;
+        if(!switchResult){
+            log.info("Received unhandled Update Type: {}", type);
+        }else{i++;//do nothing}
 
     }
 }

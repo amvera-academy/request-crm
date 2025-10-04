@@ -1,12 +1,13 @@
 package avishgreen.amvera.crm.services.telegramhandlers;
 
 import avishgreen.amvera.crm.services.SupportRequestService;
-import avishgreen.amvera.crm.services.TelegramMessageService;
-import avishgreen.amvera.crm.services.TelegramUserService;
+import avishgreen.amvera.crm.utils.UserProcessingLocker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
+
+import java.util.concurrent.locks.Lock;
 
 /**
  * Базовый класс для обработчика
@@ -18,22 +19,32 @@ public class TelegramMessageHandler {
 
     private final SupportRequestService requestService;
     private final TelegramAntispamHandler antispamHandler;
+    private final UserProcessingLocker locker;
 
     public void handleMessage(Update update)  {
         if (!update.hasMessage()) throw new RuntimeException("Update has no message!");
         var message = update.getMessage();
         var user = message.getFrom();
 
+
         //проверим, не спам ли это сообщение
         var messageId = message.getMessageId();
         var isSpam = antispamHandler.isSpam(messageId);
         if (isSpam) {
-            log.warn("SPAM message received. Id {}. SKIPPED", messageId);
+            log.warn("SPAM message id {} SKIPPED", messageId);
             return;
         }
-        log.info("Message handling. Id {}", messageId);
-        requestService.processNewMessage(message, user);
 
+        // Получаем блокировку, уникальную для этого пользователя
+        // --- Используем lock() для принудительного ожидания (троттлинга) ---
+        Lock userLock = locker.getLockForUser(user.getId());
+        userLock.lock(); // !!! Здесь поток блокируется и ждет, если мьютекс занят !!!
+        log.info("Handling message id {} from user {}", messageId, user.getId());
+        try {
+            requestService.processNewMessage(message, user);
+        }finally {
+            userLock.unlock();
+        }
 
 //        log.info("Received Update {}", message.getText());
     }
