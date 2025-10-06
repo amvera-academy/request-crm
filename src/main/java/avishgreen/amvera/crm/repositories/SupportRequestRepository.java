@@ -3,6 +3,7 @@ package avishgreen.amvera.crm.repositories;
 import avishgreen.amvera.crm.entities.SupportRequest;
 import avishgreen.amvera.crm.enums.SupportRequestStatusType;
 import jakarta.persistence.QueryHint;
+import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
@@ -31,4 +32,5 @@ public interface SupportRequestRepository extends JpaRepository<SupportRequest, 
     })
     Optional<SupportRequest> findByIdBypassingCache(Long id);
 
+    List<SupportRequest> findByAuthorIdAndChatId(@NonNull Long id, Long chatId);
 }

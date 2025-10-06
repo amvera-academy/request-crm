@@ -7,6 +7,7 @@ import avishgreen.amvera.crm.enums.SupportRequestStatusType;
 import avishgreen.amvera.crm.repositories.SupportRequestRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -18,9 +19,11 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SupportRequestService {
     private final TelegramUserService userService;
     private final TelegramMessageService messageService;
@@ -98,12 +101,19 @@ public class SupportRequestService {
             var chatId =  message.getChatId();
             List<SupportRequest> existingRequests = supportRequestRepository.findByAuthorIdAndChatIdAndStatusNotIn(user.getId(), chatId, closedStatuses);
 
-            if (!existingRequests.isEmpty()) {
+            if (existingRequests.isEmpty()) {
+                log.error("CRITICAL SEARCH FAIL (ELSE section): No active requests found for user {} in chat {}. Statuses checked: {}.",
+                        user.getId(), chatId, closedStatuses);
+                // 🔥 ДОБАВЬТЕ ЭТО: Попробуйте найти ВСЕ запросы, чтобы увидеть, где находится старый
+                List<SupportRequest> allRequests = supportRequestRepository.findByAuthorIdAndChatId(user.getId(), chatId);
+                log.error("DEBUG: Found ALL requests for this user: {}", allRequests.stream()
+                        .map(r -> r.getId() + ":" + r.getStatus())
+                        .collect(Collectors.joining(", ")));
+                supportRequest = createNewSupportRequest(sender, message.getChatId());
+            } else {
                 supportRequest = existingRequests.stream()
                         .max(Comparator.comparing(SupportRequest::getLastMessageAt))
                         .orElseThrow(() -> new IllegalStateException("Unexpectedly found a request list that is not empty but has no maximum element."));
-            } else {
-                supportRequest = createNewSupportRequest(sender, message.getChatId());
             }
         }
 
