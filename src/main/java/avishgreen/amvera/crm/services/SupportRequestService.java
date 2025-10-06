@@ -9,6 +9,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -52,6 +53,13 @@ public class SupportRequestService {
             });
 //        }
         return request;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    public SupportRequest findRequestByIdNoCache(Long id) {
+        // Используем явно объявленный метод с хинтом
+        return supportRequestRepository.findByIdBypassingCache(id)
+                .orElseThrow(() -> new RuntimeException("Request not found after commit: " + id));
     }
 
     @Transactional
