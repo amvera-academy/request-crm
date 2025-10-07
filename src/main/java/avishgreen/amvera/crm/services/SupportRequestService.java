@@ -15,10 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -104,20 +101,26 @@ public class SupportRequestService {
             if (existingRequests.isEmpty()) {
                 log.error("CRITICAL SEARCH FAIL (ELSE section): No active requests found for user {} in chat {}. Statuses checked: {}.",
                         user.getId(), chatId, closedStatuses);
-                // 🔥 ДОБАВЬТЕ ЭТО: Попробуйте найти ВСЕ запросы, чтобы увидеть, где находится старый
+                log.info("Creating new support request for sender object: {}", sender);
+                // Попробуем найти ВСЕ запросы, чтобы увидеть, где находится старый
                 List<SupportRequest> allRequests = supportRequestRepository.findByAuthorIdAndChatId(user.getId(), chatId);
                 log.error("DEBUG: Found ALL requests for this user: {}", allRequests.stream()
                         .map(r -> r.getId() + ":" + r.getStatus())
                         .collect(Collectors.joining(", ")));
                 supportRequest = createNewSupportRequest(sender, message.getChatId());
+                log.info("Created new support request PRE-SAVE. Author ID: {}, Chat ID: {}",
+                        (supportRequest.getAuthor() != null ? supportRequest.getAuthor().getId() : "NULL"),
+                        supportRequest.getChatId());
             } else {
                 supportRequest = existingRequests.stream()
-                        .max(Comparator.comparing(SupportRequest::getLastMessageAt))
-                        .orElseThrow(() -> new IllegalStateException("Unexpectedly found a request list that is not empty but has no maximum element."));
+                        .filter(Objects::nonNull) // Не забываем про null-элементы
+                        .max(Comparator.comparing(SupportRequest::getLastMessageAt, Comparator.nullsFirst(Comparator.naturalOrder())))
+                        .orElseThrow(() -> new IllegalStateException("Список запросов пуст или неожиданно пуст."));
             }
         }
 
         // Обновление обращения
+        log.info("Setting support request [{}] for user {}", supportRequest, user.getId());
         telegramMessage.setSupportRequest(supportRequest);
 //        telegramMessage = messageService.updateMessage(telegramMessage);
 

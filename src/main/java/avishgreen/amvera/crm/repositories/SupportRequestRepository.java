@@ -16,8 +16,12 @@ import java.util.Set;
 
 @Repository
 public interface SupportRequestRepository extends JpaRepository<SupportRequest, Long> {
-
+    @QueryHints({
+            @QueryHint(name = "jakarta.persistence.cache.storeMode", value = "BYPASS"),
+            @QueryHint(name = "jakarta.persistence.cache.retrieveMode", value = "BYPASS")
+    })
     List<SupportRequest> findByAuthorIdAndChatIdAndStatusNotIn(Long authorId, Long chatId, Collection<SupportRequestStatusType> statuses);
+
     // Method to find requests by a single status
     List<SupportRequest> findByStatusOrderByLastMessageAtDesc(SupportRequestStatusType status);
 
