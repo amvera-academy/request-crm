@@ -88,7 +88,7 @@ public class SupportRequestService {
             } else {
                 // Цепочка не найдена или не привязана к обращению
                 supportRequest = createNewSupportRequest(sender, message.getChatId());
-                log.warn("new request {} user [{}] sender [{}]",supportRequest.getId(),user,sender);
+                log.warn("new request {} user [{}] sender [{}] reply [{}]",supportRequest.getId(),user,sender,message.getReplyToMessage());
             }
         } else {
             // Это не ответ, используем старую логику
