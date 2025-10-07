@@ -16,7 +16,6 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -74,8 +73,9 @@ public class SupportRequestService {
             return telegramMessage.getSupportRequest();
         }
 
-        SupportRequest supportRequest;
+        SupportRequest supportRequest=null;
 
+        //попробуем привязать к обращению из реплая
         if (message.getReplyToMessage() != null) {
             // Это ответ. Ищем самое первое сообщение в цепочке
             Integer originalMessageId = message.getReplyToMessage().getMessageId();
@@ -87,11 +87,13 @@ public class SupportRequestService {
                 supportRequest = rootMessage.getSupportRequest();
             } else {
                 // Цепочка не найдена или не привязана к обращению
-                supportRequest = createNewSupportRequest(sender, message.getChatId());
-                log.warn("new request {} user [{}] sender [{}] reply [{}]",supportRequest.getId(),user,sender,message.getReplyToMessage());
+                log.warn("NULL root message, will use casual logic. user [{}] sender [{}] reply [{}]",user,sender,message.getReplyToMessage());
             }
-        } else {
-            // Это не ответ, используем старую логику
+        }
+
+        //casual search logic
+        if (supportRequest == null) {
+            // Это не ответ, используем старую логику - ищем открытые обращения и повторно их используем
             Set<SupportRequestStatusType> closedStatuses = EnumSet.of(
                     SupportRequestStatusType.COMPLETED,
                     SupportRequestStatusType.IGNORE
@@ -99,25 +101,24 @@ public class SupportRequestService {
             var chatId =  message.getChatId();
             List<SupportRequest> existingRequests = supportRequestRepository.findByAuthorIdAndChatIdAndStatusNotIn(user.getId(), chatId, closedStatuses);
 
-            if (existingRequests.isEmpty()) {
-                log.error("CRITICAL SEARCH FAIL (ELSE section): No active requests found for user {} in chat {}. Statuses checked: {}.",
-                        user.getId(), chatId, closedStatuses);
-                log.info("Creating new support request for sender object: {}", sender);
-                // Попробуем найти ВСЕ запросы, чтобы увидеть, где находится старый
-                List<SupportRequest> allRequests = supportRequestRepository.findByAuthorIdAndChatId(user.getId(), chatId);
-                log.error("DEBUG: Found ALL requests for this user: {}", allRequests.stream()
-                        .map(r -> r.getId() + ":" + r.getStatus())
-                        .collect(Collectors.joining(", ")));
-                supportRequest = createNewSupportRequest(sender, message.getChatId());
-                log.info("Created new support request PRE-SAVE. Author ID: {}, Chat ID: {}",
-                        (supportRequest.getAuthor() != null ? supportRequest.getAuthor().getId() : "NULL"),
-                        supportRequest.getChatId());
-            } else {
+            if (!existingRequests.isEmpty()) {
                 supportRequest = existingRequests.stream()
                         .filter(Objects::nonNull) // Не забываем про null-элементы
                         .max(Comparator.comparing(SupportRequest::getLastMessageAt, Comparator.nullsFirst(Comparator.naturalOrder())))
                         .orElseThrow(() -> new IllegalStateException("Список запросов пуст или неожиданно пуст."));
+            } else {
+                log.error("No active requests found for user {} in chat {}. Statuses checked: {}.",
+                        user.getId(), chatId, closedStatuses);
             }
+        }
+
+        //совсем совсем ничего подходящего не нашли, просто создадим новое обращение
+        if(supportRequest == null) {
+            supportRequest = createNewSupportRequest(sender, message.getChatId());
+            log.info("Created new support request. Author ID: {}, Chat ID: {}",
+                    (supportRequest.getAuthor() != null ? supportRequest.getAuthor().getId() : "NULL"),
+                    supportRequest.getChatId());
+
         }
 
         // Обновление обращения
