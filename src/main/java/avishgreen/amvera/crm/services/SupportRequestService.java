@@ -88,6 +88,7 @@ public class SupportRequestService {
             } else {
                 // Цепочка не найдена или не привязана к обращению
                 supportRequest = createNewSupportRequest(sender, message.getChatId());
+                log.warn("new request {} user [{}] sender [{}]",supportRequest.getId(),user,sender);
             }
         } else {
             // Это не ответ, используем старую логику
@@ -120,7 +121,6 @@ public class SupportRequestService {
         }
 
         // Обновление обращения
-        log.info("Setting support request [{}] for user {}", supportRequest, user.getId());
         telegramMessage.setSupportRequest(supportRequest);
 //        telegramMessage = messageService.updateMessage(telegramMessage);
 
