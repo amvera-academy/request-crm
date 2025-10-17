@@ -74,6 +74,10 @@ public class SupportRequestService {
         }
 
         SupportRequest supportRequest=null;
+        Set<SupportRequestStatusType> closedStatuses = EnumSet.of(
+                SupportRequestStatusType.COMPLETED,
+                SupportRequestStatusType.IGNORE
+        );
 
         //попробуем привязать к обращению из реплая
         if (message.getReplyToMessage() != null) {
@@ -84,7 +88,13 @@ public class SupportRequestService {
             TelegramMessage rootMessage = messageService.findRootMessage(originalMessageId);
 
             if (rootMessage != null && rootMessage.getSupportRequest() != null) {
-                supportRequest = rootMessage.getSupportRequest();
+                SupportRequest foundRequest = rootMessage.getSupportRequest();
+                if (!closedStatuses.contains(foundRequest.getStatus())) {
+                    supportRequest = foundRequest;
+                } else {
+                    log.warn("Reply found, but request status is closed ({}). Will use casual logic.", foundRequest.getStatus());
+                    // supportRequest останется null, и мы перейдем к "casual search logic"
+                }
             } else {
                 // Цепочка не найдена или не привязана к обращению
                 log.warn("NULL root message, will use casual logic. user [{}] sender [{}] reply [{}]",user,sender,message.getReplyToMessage());
@@ -94,10 +104,6 @@ public class SupportRequestService {
         //casual search logic
         if (supportRequest == null) {
             // Это не ответ, используем старую логику - ищем открытые обращения и повторно их используем
-            Set<SupportRequestStatusType> closedStatuses = EnumSet.of(
-                    SupportRequestStatusType.COMPLETED,
-                    SupportRequestStatusType.IGNORE
-            );
             var chatId =  message.getChatId();
             List<SupportRequest> existingRequests = supportRequestRepository.findByAuthorIdAndChatIdAndStatusNotIn(user.getId(), chatId, closedStatuses);
 
@@ -128,7 +134,7 @@ public class SupportRequestService {
         supportRequest.getMessages().add(telegramMessage);
         supportRequest.setLastMessageAt(telegramMessage.getSentAt());
         supportRequest.setLastMessage(telegramMessage);
-        supportRequest.getParticipants().add(sender);
+        //supportRequest.getParticipants().add(sender);
 
         // Логика смены статуса
         if(moderatorsService.isModerator(sender.getId())){
