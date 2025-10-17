@@ -56,7 +56,19 @@ public class TelegramMessageService {
         if(message.hasText()){messageText = message.getText();}
         if(message.hasCaption()){messageCaption = message.getCaption();}
 
-        var messageTextOrCaption = messageText==null?"[картинка]".concat(messageCaption):messageText;
+        final String messageTextOrCaption;
+
+        if (messageText != null) {
+            // Обычное текстовое сообщение
+            messageTextOrCaption = messageText;
+        } else if (messageCaption != null) {
+            // Медиафайл с подписью (Caption)
+            messageTextOrCaption = "[картинка] ".concat(messageCaption);
+        } else {
+            // Медиафайл без текста и без подписи
+            messageTextOrCaption = "[картинка без подписи]";
+        }
+
         if (existingMessage.isEmpty()) {
             telegramMessage = TelegramMessage.builder()
                     .telegramMessageId(message.getMessageId())
