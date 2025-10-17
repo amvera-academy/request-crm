@@ -56,16 +56,26 @@
         </div>
 
         <div th:each="message : ${request.messages}" class="message-container">
+
+            <div th:if="${message.previewMediaId != null or message.fullSizeMediaId != null}" class="message-media-container">
+
+                <div th:with="displayId=${(message.previewMediaId != null) ? message.previewMediaId : message.fullSizeMediaId},
+                              linkId=${(message.fullSizeMediaId != null) ? message.fullSizeMediaId : message.previewMediaId}">
+
+                    <div class="media-item">
+                        <a th:href="@{/media/{mediaId}(mediaId=${linkId})}" target="_blank" title="Открыть полный размер">
+                            <img th:src="@{/media/{mediaId}(mediaId=${displayId})}"
+                                 alt="Превью изображения"
+                                 class="media-image"
+                            />
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="message-bubble" th:classappend="${message.sender.id == request.authorId} ? 'author-message-bubble' : ''">
                 <p th:text="${message.messageText}"></p>
             </div>
-            <p class="message-timestamp-author">
-                <span th:text="${message.authorName}"></span>
-                <span>-</span>
-                <span class="message-id" th:text="'ID: ' + ${message.telegramMessageId}"></span>
-                <span>/</span>
-                <span class="message-timestamp" th:text="${#temporals.format(message.sentAt, 'HH:mm dd-MM-yyyy')}"></span>
-            </p>
         </div>
         <a href="#top" class="go-to-top-button tile-button"><i class="fas fa-arrow-up"></i></a>
     </div>

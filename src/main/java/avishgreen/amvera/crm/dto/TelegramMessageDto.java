@@ -14,5 +14,6 @@ public record TelegramMessageDto(
         Boolean isMedia,
         Long supportRequestId,
         Long replyToMessageId,
-        List<TelegramMediaDto> mediaFiles
+        Long previewMediaId,
+        Long fullSizeMediaId
 ) {}

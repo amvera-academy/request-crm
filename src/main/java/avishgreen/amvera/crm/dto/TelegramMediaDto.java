@@ -1,9 +1,12 @@
 package avishgreen.amvera.crm.dto;
 
+import avishgreen.amvera.crm.enums.TelegramMediaUsageType;
 import lombok.Builder;
 
 @Builder
 public record TelegramMediaDto(
+        // Временный ID для скачивания через Telegram API
+        Long id,
         // Временный ID для скачивания через Telegram API
         String telegramFileId,
 
@@ -16,5 +19,6 @@ public record TelegramMediaDto(
         Integer height,
 
         // Флаг, который показывает, что файл был удален Telegram
-        Boolean isDeletedByTelegram
+        Boolean isDeletedByTelegram,
+        TelegramMediaUsageType usageType
 ) {}
