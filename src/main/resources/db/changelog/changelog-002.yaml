@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 251017-table-telegram-media
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 002/up-01-create-table-telegram-media.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 002/dn-01-drop-table-telegram-media.sql
+            relativeToChangeLogFile: "true"
+

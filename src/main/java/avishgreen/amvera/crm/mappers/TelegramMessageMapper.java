@@ -19,9 +19,11 @@ public interface TelegramMessageMapper {
 //                    " +\" @\"+ message.getSender().getUsername() + \" \"" +
 //                    " + message.getSender().getLastName() )")
     @Mapping(target = "authorName", source = "sender", qualifiedByName = "mapSenderToName")
+    @Mapping(target = "mediaFiles", source = "mediaFiles")
     TelegramMessageDto toDto(TelegramMessage message);
 
     @Mapping(target = "supportRequest", ignore = true)
+    @Mapping(target = "mediaFiles", ignore = true)
     TelegramMessage toEntity(TelegramMessageDto dto);
 
     @Named("mapSupportRequestId")

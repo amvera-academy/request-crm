@@ -23,3 +23,14 @@ databaseChangeLog:
         - tagDatabase:
             tag: init_db
 
+  - include:
+      file: changelog-002.yaml
+      relativeToChangelogFile: true
+
+  - changeSet:
+      id: 251017-media
+      author: Avishgreen
+      changes:
+        - tagDatabase:
+            tag: adding-media
+

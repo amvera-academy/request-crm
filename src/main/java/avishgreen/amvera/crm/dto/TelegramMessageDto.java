@@ -1,6 +1,7 @@
 package avishgreen.amvera.crm.dto;
 
 import java.time.Instant;
+import java.util.List;
 
 public record TelegramMessageDto(
         Long telegramMessageId,
@@ -12,5 +13,6 @@ public record TelegramMessageDto(
         Boolean isEdited,
         Boolean isMedia,
         Long supportRequestId,
-        Long replyToMessageId
+        Long replyToMessageId,
+        List<TelegramMediaDto> mediaFiles
 ) {}

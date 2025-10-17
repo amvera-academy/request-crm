@@ -3,8 +3,10 @@ package avishgreen.amvera.crm.controllers;
 import avishgreen.amvera.crm.dto.SupportRequestDto;
 import avishgreen.amvera.crm.dto.UserNoteDto;
 import avishgreen.amvera.crm.entities.AppUser;
+import avishgreen.amvera.crm.entities.TelegramMedia;
 import avishgreen.amvera.crm.services.AppUserService;
 import avishgreen.amvera.crm.services.ReviewService;
+import avishgreen.amvera.crm.services.TelegramMediaService;
 import avishgreen.amvera.crm.services.UserNoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -22,6 +24,7 @@ public class SupportRequestController {
     private final ReviewService reviewService;
     private final AppUserService appUserService;
     private final UserNoteService userNoteService;
+    private final TelegramMediaService telegramMediaService;
 
     @GetMapping("/support-request/{id}")
     public String getSupportRequest(@PathVariable("id") Long requestId, Model model, Authentication authentication) {

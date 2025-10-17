@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "telegram_messages")
@@ -47,4 +49,7 @@ public class TelegramMessage {
     @Builder.Default
     @Column(name = "is_media")
     private Boolean isMedia = false;
+
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TelegramMedia> mediaFiles = new ArrayList<>();
 }

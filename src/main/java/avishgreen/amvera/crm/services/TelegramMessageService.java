@@ -16,6 +16,8 @@ import java.util.Optional;
 public class TelegramMessageService {
     private final TelegramMessageRepository messageRepository;
     private final TelegramUserService userService;
+    private final TelegramMediaService telegramMediaService;
+
 
     @Transactional
     public void saveBotMessage(TelegramMessage message){
@@ -83,6 +85,11 @@ public class TelegramMessageService {
             telegramMessage = existingMessage.get();
         }
         messageRepository.save(telegramMessage);
+
+        // Если сообщение содержит фото, обрабатываем и сохраняем метаданные медиа.
+        if (message.hasPhoto()) {
+            telegramMediaService.processMessageMedia(message, telegramMessage);
+        }
 
         return telegramMessage;
     }

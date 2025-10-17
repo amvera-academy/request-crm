@@ -1,13 +1,14 @@
 package avishgreen.amvera.crm.services;
 
 import avishgreen.amvera.crm.configs.AppConfig;
+import avishgreen.amvera.crm.exceptions.TelegramFileNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
-import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
-import org.telegram.telegrambots.meta.api.methods.ForwardMessage;
-import org.telegram.telegrambots.meta.api.methods.GetMe;
-import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.*;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatMember;
 import org.telegram.telegrambots.meta.api.methods.pinnedmessages.PinChatMessage;
 import org.telegram.telegrambots.meta.api.methods.reactions.SetMessageReaction;
@@ -15,6 +16,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -22,6 +24,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Сервис для взаимодействия с Telegram Bot API.
@@ -32,10 +37,12 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 public class TelegramApiService {
 
     private final TelegramClient telegramClient;
-
+    private final String botToken;
+    private final OkHttpClient httpClientForDownload = new OkHttpClient(); // Отдельный клиент для скачивания
 
     public TelegramApiService(AppConfig appConfig) {
         this.telegramClient = new OkHttpTelegramClient(appConfig.getTelegram().getToken());
+        this.botToken = appConfig.getTelegram().getToken();
     }
 
 
@@ -300,5 +307,70 @@ public class TelegramApiService {
             result = false;
         }
         return result;
+    }
+
+    /**
+     * Получает информацию о файле по его ID, включая file_path, необходимый для скачивания.
+     * @param fileId Идентификатор файла.
+     * @return Объект File, содержащий метаданные, или null в случае ошибки.
+     */
+    public File getFile(String fileId) {
+        GetFile getFileMethod = GetFile.builder().fileId(fileId).build();
+        try {
+            return telegramClient.execute(getFileMethod);
+        } catch (TelegramApiException e) {
+            log.error("Failed to get file information for file ID {}", fileId, e);
+            return null;
+        }
+    }
+
+    /**
+     * Скачивает файл по его относительному пути (file_path).
+     * Построение URL: https://api.telegram.org/file/bot<token>/<file_path>
+     * @param filePath Относительный путь к файлу, полученный из объекта File.
+     * @return InputStream скачанного файла. Вызывающая сторона должна закрыть этот поток.
+     * @throws IOException Если произошла ошибка сети или ответа.
+     */
+    public InputStream downloadFile(String filePath) throws IOException {
+        if (filePath == null || filePath.isEmpty()) {
+            throw new IllegalArgumentException("File path cannot be null or empty.");
+        }
+
+        String downloadUrl = String.format("https://api.telegram.org/file/bot%s/%s", this.botToken, filePath);
+
+        Request request = new Request.Builder()
+                .url(downloadUrl)
+                .build();
+
+        try {
+            Response response = httpClientForDownload.newCall(request).execute();
+
+            if (response.isSuccessful()) {
+                // Успешное скачивание
+                return response.body().byteStream();
+            } else {
+                int code = response.code();
+                String responseBody = response.body() != null ? response.body().string() : "No body";
+                response.close();
+
+                // 404 Not Found - наиболее вероятный код, если файл удален или путь неверен
+                if (code == 404) {
+                    log.warn("File not found on Telegram server for path: {}", filePath);
+                    throw new TelegramFileNotFoundException("Файл удален или не найден на сервере Telegram (HTTP 404).");
+                }
+                // 400 Bad Request, 500 Server Error и т.д.
+                else {
+                    log.error("Failed to download file from {} with HTTP code {}. Response body: {}",
+                            downloadUrl, code, responseBody);
+                    throw new IOException("Ошибка HTTP при скачивании файла. Код: " + code);
+                }
+            }
+        } catch (IOException e) {
+            // Здесь перехватываются сетевые ошибки OkHttp (например, таймаут, недоступность хоста)
+            if (!(e instanceof TelegramFileNotFoundException)) {
+                log.error("Network error while trying to download file from {}", downloadUrl, e);
+            }
+            throw e; // Перебрасываем для обработки на следующем уровне
+        }
     }
 }
