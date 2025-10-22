@@ -48,7 +48,7 @@ public class MediaController {
 
         } catch (TelegramFileNotFoundException e) {
             // Файл удален на стороне Telegram или помечен как удаленный (HTTP 404)
-            log.warn("Attempt to access deleted media (ID: {}).", mediaId);
+            log.warn("Attempt to access deleted mediaFiles (ID: {}).", mediaId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Медиафайл удален или не найден.", e);
 
         } catch (IllegalArgumentException e) {
@@ -58,7 +58,7 @@ public class MediaController {
 
         } catch (IOException e) {
             // Сетевые ошибки, Telegram API недоступен, проблемы с I/O
-            log.error("Failed to download media content (ID: {}) due to IO/network error.", mediaId, e);
+            log.error("Failed to download mediaFiles content (ID: {}) due to IO/network error.", mediaId, e);
             // Возвращаем 503 Service Unavailable, указывая на временную проблему
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Сервер Telegram недоступен. Повторите попытку позже.", e);
         }

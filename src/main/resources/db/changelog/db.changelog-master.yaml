@@ -28,9 +28,9 @@ databaseChangeLog:
       relativeToChangelogFile: true
 
   - changeSet:
-      id: 251017-media
+      id: 251017-mediaFiles
       author: Avishgreen
       changes:
         - tagDatabase:
-            tag: adding-media
+            tag: adding-mediaFiles
 

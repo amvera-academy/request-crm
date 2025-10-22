@@ -14,6 +14,24 @@ public record TelegramMessageDto(
         Boolean isMedia,
         Long supportRequestId,
         Long replyToMessageId,
-        Long previewMediaId,
-        Long fullSizeMediaId
-) {}
+        String mediaGroupId,
+        List<TelegramMediaDto> mediaFiles
+) {
+    // Вспомогательный метод для создания новой копии с измененным списком медиа
+    public TelegramMessageDto withMediaFiles(List<TelegramMediaDto> newMediaList) {
+        return new TelegramMessageDto(
+                this.telegramMessageId(),
+                this.messageText(),
+                this.sender(),
+                this.authorName(),
+                this.chatId(),
+                this.sentAt(),
+                this.isEdited(),
+                this.isMedia(),
+                this.supportRequestId(),
+                this.replyToMessageId(),
+                this.mediaGroupId(),
+                newMediaList // <-- Подставляем новый, отфильтрованный список
+        );
+    }
+}

@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 251017-table-telegram-media
+      id: 251017-table-telegram-mediaFiles
       author: avishgreen@gmail.com
       changes:
         - sqlFile:
@@ -9,5 +9,27 @@ databaseChangeLog:
       rollback:
         - sqlFile:
             path: 002/dn-01-drop-table-telegram-media.sql
+            relativeToChangeLogFile: "true"
+  - changeSet:
+      id: 251021-table-telegram-messages
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 002/up-03-alter-table-telegram-messages.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 002/dn-03-alter-table-telegram-messages.sql
+            relativeToChangeLogFile: "true"
+  - changeSet:
+      id: 251021-table-telegram-media
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 002/up-05-alter-table-telegram-media.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 002/dn-05-alter-table-telegram-media.sql
             relativeToChangeLogFile: "true"
 

@@ -4,10 +4,7 @@ import avishgreen.amvera.crm.dto.SupportRequestDto;
 import avishgreen.amvera.crm.dto.UserNoteDto;
 import avishgreen.amvera.crm.entities.AppUser;
 import avishgreen.amvera.crm.entities.TelegramMedia;
-import avishgreen.amvera.crm.services.AppUserService;
-import avishgreen.amvera.crm.services.ReviewService;
-import avishgreen.amvera.crm.services.TelegramMediaService;
-import avishgreen.amvera.crm.services.UserNoteService;
+import avishgreen.amvera.crm.services.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -21,16 +18,17 @@ import java.util.stream.Collectors;
 @Controller
 @RequiredArgsConstructor
 public class SupportRequestController {
-    private final ReviewService reviewService;
+    private final ReviewService reviewService;// Нужен для pastRequests
     private final AppUserService appUserService;
     private final UserNoteService userNoteService;
     private final TelegramMediaService telegramMediaService;
+    private final SupportRequestService supportRequestService;
 
     @GetMapping("/support-request/{id}")
     public String getSupportRequest(@PathVariable("id") Long requestId, Model model, Authentication authentication) {
 
         // Выносим получение SupportRequestDto и добавление pageTitle за пределы if-else
-        SupportRequestDto supportRequestDto = reviewService.getSupportRequestDtoById(requestId);
+        SupportRequestDto supportRequestDto = supportRequestService.getSupportRequestDtoForDisplay(requestId);
         if (supportRequestDto == null) {
             return "redirect:/error";
         }

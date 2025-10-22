@@ -3,6 +3,7 @@ package avishgreen.amvera.crm.entities;
 import avishgreen.amvera.crm.enums.TelegramMediaUsageType;
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.Instant;
 
 @Entity
 @Getter
@@ -40,7 +41,17 @@ public class TelegramMedia {
     // Флаг, указывающий, что файл был удален из хранилища Telegram и больше недоступен (404/410).
     // Используется для избежания повторных запросов к API.
     @Column(name = "is_deleted_by_telegram", nullable = false)
+    @Builder.Default
     private Boolean isDeletedByTelegram = false;
+
+    // Счетчик неудачных попыток загрузки файла
+    @Column(name = "retry_count", nullable = false)
+    @Builder.Default
+    private Integer retryCount = 0;
+
+    // Дата последней попытки для реализации задержки (back-off)
+    @Column(name = "last_attempt_at")
+    private Instant lastAttemptAt;
 
     // Ссылка на родительское сообщение
     @ManyToOne(fetch = FetchType.LAZY)

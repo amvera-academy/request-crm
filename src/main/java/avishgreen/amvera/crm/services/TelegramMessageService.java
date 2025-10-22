@@ -65,7 +65,8 @@ public class TelegramMessageService {
             messageTextOrCaption = messageText;
         } else if (messageCaption != null) {
             // Медиафайл с подписью (Caption)
-            messageTextOrCaption = "[картинка] ".concat(messageCaption);
+//            messageTextOrCaption = "[картинка] ".concat(messageCaption);
+            messageTextOrCaption = "".concat(messageCaption);
         } else {
             // Медиафайл без текста и без подписи
             messageTextOrCaption = "[картинка без подписи]";
@@ -79,6 +80,7 @@ public class TelegramMessageService {
                     .sender(sender)
                     .chatId(message.getChatId())
                     .replyToMessageId(replyToMessageId) // Сохраняем ID ответа
+                    .mediaGroupId(message.getMediaGroupId())
                     .build();
 
         }else{

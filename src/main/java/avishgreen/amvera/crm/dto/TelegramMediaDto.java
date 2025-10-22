@@ -19,6 +19,6 @@ public record TelegramMediaDto(
         Integer height,
 
         // Флаг, который показывает, что файл был удален Telegram
-        Boolean isDeletedByTelegram,
+        Boolean deletedByTelegram,
         TelegramMediaUsageType usageType
 ) {}

@@ -54,13 +54,14 @@ body {
     background-color: #e9ecef;
 }
 
+/* 1. Блок ввода сообщения: на всю ширину */
 .new-message-form-container {
     padding: 0;
     border: none;
     background-color: transparent;
     border-radius: 0;
     margin-bottom: 20px;
-    max-width: 80%;
+    max-width: 100%; /* <-- ИЗМЕНЕНО */
 }
 
 .new-message-form {
@@ -137,7 +138,7 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
-    max-width: 80%;
+    max-width: 100%;
 }
 
 .note-label {
@@ -148,7 +149,7 @@ body {
 
 .note-value textarea {
     width: 100%;
-    max-width: 80%;
+    max-width: 100%;
     border: 1px solid #ddd;
     border-radius: 5px;
     padding: 10px;
@@ -164,32 +165,115 @@ body {
 }
 
 .message-container {
-    margin-bottom: 15px;
+    /* ВОЗВРАЩАЕМ FLEXBOX */
+    display: flex;
+    flex-direction: column;
+
+    margin-bottom: 20px;
+    width: 100%;
+    overflow: hidden;
 }
 
+/* --- Стили для обтекания медиа-контента (FLOAT) --- */
+
+/* 1. ОБЩИЕ стили для message-bubble (ДЛЯ ЛЕВОГО КРАЯ) */
 .message-bubble {
-    background-color: #e2e8f0;
+    background-color: #f0f0f0; /* Цвет для клиента (слева) */
     padding: 10px 15px;
     border-radius: 18px;
+    margin-bottom: 5px;
+
+    overflow: hidden;
+
+    width: auto;
     max-width: 80%;
+    min-width: 180px; /* 150px (картинка) + 15px (слева) + 15px (справа) = 180px */
+}
+
+/* 2. Стили для медиа-контейнера (ОБЩИЕ СТИЛЫ: ВСЕГДА float: left) */
+.message-media-container {
+    float: left; /* КЛЮЧ: Всегда плавает влево для всех сообщений */
+    max-width: 150px;
+    margin-right: 10px; /* Отступ справа от картинки до текста */
     margin-bottom: 5px;
 }
 
-.author-message-bubble {
-    background-color: #f0f0f0;
+.message-media-container .media-item {
+    display: block;
 }
 
+.message-media-container .media-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 5px;
+}
+
+/* 3. Стили для бабла АВТОРА (Клиента) - остается слева.
+   Переопределяем, чтобы не было никаких margin: auto */
+.author-message-bubble {
+    background-color: #f0f0f0; /* Цвет клиента */
+    float: left;
+    margin-left: 0;
+    margin-right: 20%;
+}
+
+/* Стили для сообщений МОДЕРАТОРА (Выравнивание вправо) */
+.moderator-message-bubble {
+    background-color: #e2e8f0; /* Цвет для модератора (голубоватый) */
+    float: right;
+    margin-right: 0;
+    margin-left: 20%;
+}
+
+/* 4. Обновляем текстовый параграф внутри бабла */
 .message-bubble p {
     margin: 0;
     line-height: 1.4;
+    /* СБРОС FLEXBOX */
+    flex-grow: 0;
+    min-width: auto;
 }
 
-.message-timestamp-author {
+/* ==================================== */
+/* ФУТЕР СООБЩЕНИЯ (message-info-footer) */
+/* ==================================== */
+
+.message-info-footer {
     font-size: 0.8em;
-    color: #666;
-    margin-left: 15px;
+    color: #666; /* Цвет, который вы использовали */
+    margin-top: 3px;
+
+    /* Делаем содержимое футера строкой (для разделения ID / Дата) */
+    display: flex;
+    gap: 5px;
+    white-space: nowrap;
+
+    /*width: 100%; !* Должен занимать всю ширину, чтобы его float сработал *!*/
 }
 
+.message-info-footer .separator {
+    color: #aaa;
+}
+
+/* Выравнивание футера автора (слева) */
+.author-info-footer {
+    float: left;
+    clear: left; /* Гарантирует, что он будет под пузырем */
+    padding-left: 15px;
+}
+
+/* Выравнивание футера модератора (справа) */
+.moderator-info-footer {
+    padding-right: 15px;
+    align-self: flex-end;
+    /* УДАЛЯЕМ FLOAT СВОЙСТВА */
+    float: none;
+    clear: none;
+    justify-content: flex-end;
+}
+
+/* 2. Кнопки прокрутки: на всю ширину и центрирование */
 .go-to-bottom-button,
 .go-to-top-button {
     display: flex;
@@ -204,9 +288,9 @@ body {
     background-color: #f0f0f0;
     border-radius: 5px;
     transition: background-color 0.3s, border-color 0.3s;
-    margin-left: 0;
-    margin-right: auto;
-    width: 80%;
+    margin-left: auto; /* <-- ИЗМЕНЕНО */
+    margin-right: auto; /* <-- ИЗМЕНЕНО */
+    width: 100%; /* <-- ИЗМЕНЕНО */
     margin-top: 10px;
     margin-bottom: 10px;
     box-sizing: border-box;
@@ -263,21 +347,31 @@ html {
     min-width: 250px;
 }
 
-.message-bubble-container {
-    display: flex;
-    flex-direction: column;
+.reviews-table .message-bubble-container {
+    display: block;
 }
 
-.message-bubble {
+/* Стили для message-bubble внутри таблицы "Предыдущие обращения" */
+.reviews-table .message-bubble-container .message-bubble {
+    /* Сбрасываем стили, влияющие на float, и применяем обрезку */
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+
     background-color: #e6e6e6;
     border-radius: 12px;
     padding: 8px 12px;
     margin-bottom: 5px;
+
+    /* Стили для обрезки текста в таблице */
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    /* СБРОС СТИЛЕЙ FLOAT для таблиц */
+    display: block;
+    float: none;
 }
 
 .message-timestamp-author {

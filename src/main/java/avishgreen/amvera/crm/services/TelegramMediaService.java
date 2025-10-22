@@ -16,6 +16,8 @@ import org.telegram.telegrambots.meta.api.objects.photo.PhotoSize;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,8 @@ public class TelegramMediaService {
 
     private final TelegramMediaRepository mediaRepository;
     private final TelegramApiService telegramApiService;
+    // Интервал задержки в минутах, после которого разрешается новая попытка
+    private static final long BASE_RETRY_INTERVAL_MINUTES = 10;
 
     /**
      * Обрабатывает медиафайлы, прикрепленные к сообщению, сохраняя метаданные
@@ -113,6 +117,7 @@ public class TelegramMediaService {
     /**
      * Вызывается из проксирующего контроллера для получения контента медиафайла.
      * Обрабатывает случаи, когда файл может быть удален с сервера Telegram.
+     * * Реализует логику задержки повторных попыток (back-off) и счетчик неудач.
      *
      * @param mediaId ID сущности TelegramMedia в нашей базе данных.
      * @return InputStream содержимого файла. Вызывающая сторона должна закрыть этот поток.
@@ -120,57 +125,117 @@ public class TelegramMediaService {
      */
     @Transactional
     public InputStream downloadMediaContent(Long mediaId) throws IOException {
-        // Найти метаданные файла в нашей БД
+        // 1. Найти метаданные файла в нашей БД
         TelegramMedia media = mediaRepository.findById(mediaId)
                 .orElseThrow(() -> new IllegalArgumentException("Медиафайл с ID " + mediaId + " не найден в БД."));
 
-        // Проверить, не помечен ли файл как удаленный
-        if (media.getIsDeletedByTelegram()) {
-            log.warn("Attempt to download media with ID {} failed: file permanently deleted by Telegram.", mediaId);
-            // Возвращаем специфическое исключение для 404
-            throw new TelegramFileNotFoundException("Файл помечен как удаленный в нашей системе.");
+        // 2. Проверка Блокировки (на основе растущего таймаута)
+        if (Boolean.TRUE.equals(media.getIsDeletedByTelegram())) {
+
+            // Если файл помечен как удаленный (временный флаг "недоступно")
+            if (media.getRetryCount() > 0 && media.getLastAttemptAt() != null) {
+
+                if (isRetryBlocked(media)) {
+                    // Таймаут ещё не прошёл, возвращаем ошибку.
+                    long minutesRemaining = remainsDelayMinutes(media);
+
+                    log.info("Media ID {} is blocked for retry (attempt #{}). Blocking for {} more minutes.",
+                            mediaId, media.getRetryCount(), minutesRemaining);
+
+                    throw new IOException("Файл временно недоступен. Повторная попытка разрешена через примерно "
+                            + minutesRemaining + " минут.");
+                }
+
+                // ЕСЛИ ТАЙМАУТ ПРОШЕЛ, ПЕРЕХОДИМ К ПОПЫТКЕ ЗАГРУЗКИ (3)
+                log.info("Media ID {} backoff period ended after {} minutes. Attempting retry...", mediaId, countDelayMinutes(media));
+            }
         }
 
-        // Получить file_path из Telegram API
-        File telegramFile;
+        // --- 3. Попытка взаимодействия с Telegram API ---
+
         try {
-            // Используем fileId из нашей сущности для запроса метаданных в Telegram
-            telegramFile = telegramApiService.getFile(media.getTelegramFileId());
+            // A. Получить file_path из Telegram API и Скачать файл
+            File telegramFile = telegramApiService.getFile(media.getTelegramFileId());
+
+            if (telegramFile == null || telegramFile.getFilePath() == null || telegramFile.getFilePath().isEmpty()) {
+                // Если нет пути, это ошибка, которую нужно обработать как неудачную попытку
+                var ioEx = new IOException("Telegram returned file metadata without a file_path.");
+                handleFailedAttempt(media, ioEx);
+                throw ioEx;
+            }
+
+            InputStream fileStream = telegramApiService.downloadFile(telegramFile.getFilePath());
+
+            // 4. УСПЕХ: Сбросить все флаги
+            if (Boolean.TRUE.equals(media.getIsDeletedByTelegram())) {
+                media.setIsDeletedByTelegram(false); // Сброс временной пометки
+                media.setRetryCount(0);             // Сброс счетчика
+                media.setLastAttemptAt(null);       // Сброс времени
+                mediaRepository.save(media);
+                log.info("Media ID {} successfully downloaded. Entity flags reset.", mediaId);
+            }
+
+            return fileStream;
+
         } catch (Exception e) {
-            // Обработка любых ошибок при вызове getFile (например, API недоступен)
-            log.error("Failed to get file metadata for media ID {} from Telegram.", mediaId, e);
-            throw new IOException("Ошибка при получении метаданных файла из Telegram.", e);
+            // 5. ОШИБКА: Файл не найден (404/410) или Сетевая/IO ошибка/Таймаут
+            handleFailedAttempt(media, e);
+
+            // Перебрасываем исключение
+            if (e instanceof TelegramFileNotFoundException) {
+                throw e; // 404/410 от Telegram
+            } else {
+                throw new IOException("Ошибка при взаимодействии с API Telegram.", e);
+            }
         }
+    }
 
-        // Проверка file_path
-        if (telegramFile == null || telegramFile.getFilePath() == null || telegramFile.getFilePath().isEmpty()) {
-            log.warn("Telegram returned file metadata without a file_path for ID: {}", mediaId);
-            // Установим isDeletedByTelegram=true,
-            // так как это неверное состояние, которое может быть перманентным.
-            // Обработка: Файл удален на стороне Telegram (HTTP 404)
-            media.setIsDeletedByTelegram(true); // Устанавливаем пометку
-            mediaRepository.save(media); // Сохраняем изменение в транзакции
-            throw new IOException("Telegram не вернул путь к файлу (file_path). Flagging entity");
+    // --- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ---
+
+    /**
+     * Проверяет, прошло ли необходимое время задержки с последней попытки.
+     */
+    public boolean isRetryBlocked(@NotNull TelegramMedia media) {
+        var lastAttempt = media.getLastAttemptAt();
+        var nextDelayMinutes = countDelayMinutes(media);
+
+        if (lastAttempt == null) {
+            return false;
         }
+        return lastAttempt.plus(nextDelayMinutes, ChronoUnit.MINUTES).isAfter(Instant.now());
+    }
 
-        // Скачать файл
-        try {
-            // Вызываем метод скачивания, который может выбросить TelegramFileNotFoundException
-            return telegramApiService.downloadFile(telegramFile.getFilePath());
+    //Считаем экспоненциальную задержку
+    private long countDelayMinutes(@NotNull TelegramMedia media) {
+        var retryCount = media.getRetryCount()+1;
 
-        } catch (TelegramFileNotFoundException e) {
-            // Обработка: Файл удален на стороне Telegram (HTTP 404)
-            media.setIsDeletedByTelegram(true); // Устанавливаем пометку
-            mediaRepository.save(media); // Сохраняем изменение в транзакции
-            log.warn("Media file ID {} has been permanently deleted by Telegram. Flagging entity.", mediaId);
-            // Перебрасываем исключение, чтобы контроллер знал о проблеме 404
-            throw e;
+        return (long) retryCount*retryCount*BASE_RETRY_INTERVAL_MINUTES;
+    }
 
-        } catch (IOException e) {
-            // Сетевые ошибки (таймаут, Telegram недоступен и т.д.)
-            // В этом случае НЕ ставим isDeletedByTelegram = true
-            log.error("Network or IO error while downloading media ID {}.", mediaId, e);
-            throw e; // Перебрасываем ошибку для обработки на уровне контроллера (например, 503 Service Unavailable)
-        }
+    //Считаем сколько еще осталось минут задержки
+    private long remainsDelayMinutes(@NotNull TelegramMedia media) {
+        long minutesPassed = ChronoUnit.MINUTES.between(media.getLastAttemptAt(), Instant.now());
+        long minutesRemaining = countDelayMinutes(media) - minutesPassed;
+        return minutesRemaining;
+    }
+
+    /**
+     * Обрабатывает неудачную попытку: помечает как временно удаленный, увеличивает счетчик и обновляет время.
+     */
+    private void handleFailedAttempt(@NotNull TelegramMedia media, @NotNull Exception exception) {
+
+        // Всегда помечаем файл как временно недоступный/удаленный при неудаче.
+        media.setIsDeletedByTelegram(true);
+
+        int newCount = media.getRetryCount() + 1;
+        media.setRetryCount(newCount);
+        media.setLastAttemptAt(Instant.now());
+
+        long nextDelayMinutes = countDelayMinutes(media);
+
+        log.warn("Media ID {} failed attempt #{}. Blocking for {} minutes until next try.",
+                media.getId(), newCount, nextDelayMinutes, exception);
+
+        mediaRepository.save(media);
     }
 }

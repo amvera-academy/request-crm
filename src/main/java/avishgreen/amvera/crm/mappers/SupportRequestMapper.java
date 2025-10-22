@@ -29,6 +29,9 @@ public abstract class SupportRequestMapper {
     @Mapping(target = "participantNames", source = ".", qualifiedByName = "toParticipantNames")
     @Mapping(target = "lastMessageText", source = "lastMessage.messageText")
     @Mapping(target = "note", source = ".", qualifiedByName = "toNote")
+
+    // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Игнорируем сообщения, так как они будут добавлены в DTO вручную
+    @Mapping(target = "messages", ignore = true)
     public abstract SupportRequestDto toDto(SupportRequest entity);
 
     @Named("toParticipantNames")

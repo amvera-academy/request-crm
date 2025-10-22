@@ -56,33 +56,46 @@
         </div>
 
         <div th:each="message : ${request.messages}" class="message-container">
+            <div class="message-bubble"
+                 th:classappend="${message.sender.id != request.authorId} ? 'moderator-message-bubble' : 'author-message-bubble'">
 
-            <div th:if="${message.previewMediaId != null or message.fullSizeMediaId != null}" class="message-media-container">
+                <div th:each="mediaItem : ${message.mediaFiles}" class="message-media-container">
 
-                <div th:with="displayId=${(message.previewMediaId != null) ? message.previewMediaId : message.fullSizeMediaId},
-                              linkId=${(message.fullSizeMediaId != null) ? message.fullSizeMediaId : message.previewMediaId}">
+                    <div th:if="${!mediaItem.deletedByTelegram}">
+                        <div th:with="displayId=${mediaItem.id}, linkId=${mediaItem.id}">
+                            <div class="media-item">
+                                <a th:href="@{/media/{mediaId}(mediaId=${linkId})}" target="_blank" title="Открыть полный размер">
+                                    <img th:src="@{/media/{mediaId}(mediaId=${displayId})}"
+                                         alt="Превью изображения"
+                                         class="media-image"
+                                    />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
-                    <div class="media-item">
-                        <a th:href="@{/media/{mediaId}(mediaId=${linkId})}" target="_blank" title="Открыть полный размер">
-                            <img th:src="@{/media/{mediaId}(mediaId=${displayId})}"
-                                 alt="Превью изображения"
+                    <div th:if="${mediaItem.deletedByTelegram}">
+                        <div class="media-item">
+                            <img th:src="@{/images/pic-deleted.jpg}"
+                                 alt="Picture deleted"
                                  class="media-image"
                             />
-                        </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="message-bubble" th:classappend="${message.sender.id == request.authorId} ? 'author-message-bubble' : ''">
                 <p th:text="${message.messageText}"></p>
             </div>
-            <p class="message-timestamp-author">
-                <span th:text="${message.authorName}"></span>
-                <span>-</span>
+
+            <div class="message-info-footer"
+                 th:classappend="${message.sender.id != request.authorId} ? 'moderator-info-footer' : 'author-info-footer'">
+                <span class="sender-name">
+                    <strong th:text="${message.authorName}"></strong>
+                </span>
+                <span class="separator">-</span>
                 <span class="message-id" th:text="'ID: ' + ${message.telegramMessageId}"></span>
-                <span>/</span>
+                <span class="separator">/</span>
                 <span class="message-timestamp" th:text="${#temporals.format(message.sentAt, 'HH:mm dd-MM-yyyy')}"></span>
-            </p>
+            </div>
         </div>
         <a href="#top" class="go-to-top-button tile-button"><i class="fas fa-arrow-up"></i></a>
     </div>

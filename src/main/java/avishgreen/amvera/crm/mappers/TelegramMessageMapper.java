@@ -2,37 +2,30 @@ package avishgreen.amvera.crm.mappers;
 
 import avishgreen.amvera.crm.dto.TelegramMessageDto;
 import avishgreen.amvera.crm.entities.SupportRequest;
-import avishgreen.amvera.crm.entities.TelegramMedia;
 import avishgreen.amvera.crm.entities.TelegramMessage;
 import avishgreen.amvera.crm.entities.TelegramUser;
-import avishgreen.amvera.crm.enums.TelegramMediaUsageType;
-import avishgreen.amvera.crm.services.UserNoteService;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-import org.mapstruct.ReportingPolicy;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mapstruct.*;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring",
-        uses = {TelegramUserMapper.class},
-        unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface TelegramMessageMapper {
-
+        uses = {TelegramUserMapper.class, TelegramMediaMapper.class},
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        // ИСПОЛЬЗУЕМ: Если исходное поле равно null, MapStruct игнорирует маппинг.
+        // НО для коллекций по умолчанию он должен ставить пустой список, если target не примитив.
+        // Чтобы быть уверенным, что null-коллекция не передастся, используем:
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE // <-- Добавляем это
+)public interface TelegramMessageMapper {
     @Mapping(target = "supportRequestId", source = "supportRequest", qualifiedByName = "mapSupportRequestId")
-//    @Mapping(target = "authorName",
-//            expression = "java(message.getSender().getFirstName() " +
-//                    " +\" @\"+ message.getSender().getUsername() + \" \"" +
-//                    " + message.getSender().getLastName() )")
     @Mapping(target = "authorName", source = "sender", qualifiedByName = "mapSenderToName")
-    @Mapping(target = "previewMediaId", source = "mediaFiles", qualifiedByName = "getPreviewId")
-    @Mapping(target = "fullSizeMediaId", source = "mediaFiles", qualifiedByName = "getFullSizeId")
+    @Mapping(target = "mediaFiles", source = "mediaFiles")
+    @Mapping(target = "sender", source = "sender")
     TelegramMessageDto toDto(TelegramMessage message);
 
+    // Добавляем маппинг для списка, если он нужен для SupportRequestDto
+    List<TelegramMessageDto> toDtoList(List<TelegramMessage> messageList);
+
     @Mapping(target = "supportRequest", ignore = true)
-//    @Mapping(target = "previewMediaId", ignore = true)
-//    @Mapping(target = "fullSizeMediaId", ignore = true)
     TelegramMessage toEntity(TelegramMessageDto dto);
 
     @Named("mapSupportRequestId")
@@ -66,37 +59,5 @@ public interface TelegramMessageMapper {
         } else {
             return String.join(" ",username,userId).trim();
         }
-    }
-
-    /**
-     * Ищет медиафайл с usageType == PREVIEW и возвращает его ID.
-     */
-    @Named("getPreviewId")
-    default Long getPreviewId(List<TelegramMedia> mediaFiles) {
-        if (mediaFiles == null) {
-            return null;
-        }
-
-        return mediaFiles.stream()
-                .filter(media -> media.getUsageType() == TelegramMediaUsageType.PREVIEW)
-                .map(TelegramMedia::getId) // Извлекаем ID сущности
-                .findFirst()
-                .orElse(null);
-    }
-
-    /**
-     * Ищет медиафайл с usageType == FULL_SIZE и возвращает его ID.
-     */
-    @Named("getFullSizeId")
-    default Long getFullSizeId(List<TelegramMedia> mediaFiles) {
-        if (mediaFiles == null) {
-            return null;
-        }
-
-        return mediaFiles.stream()
-                .filter(media -> media.getUsageType() == TelegramMediaUsageType.FULL_SIZE)
-                .map(TelegramMedia::getId) // Извлекаем ID сущности
-                .findFirst()
-                .orElse(null);
     }
 }

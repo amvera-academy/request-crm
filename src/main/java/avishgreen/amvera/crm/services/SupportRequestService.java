@@ -1,9 +1,15 @@
 package avishgreen.amvera.crm.services;
 
+import avishgreen.amvera.crm.dto.SupportRequestDto;
+import avishgreen.amvera.crm.dto.TelegramMediaDto;
+import avishgreen.amvera.crm.dto.TelegramMessageDto;
 import avishgreen.amvera.crm.entities.SupportRequest;
 import avishgreen.amvera.crm.entities.TelegramMessage;
 import avishgreen.amvera.crm.entities.TelegramUser;
 import avishgreen.amvera.crm.enums.SupportRequestStatusType;
+import avishgreen.amvera.crm.enums.TelegramMediaUsageType;
+import avishgreen.amvera.crm.mappers.SupportRequestMapper;
+import avishgreen.amvera.crm.mappers.TelegramMessageMapper;
 import avishgreen.amvera.crm.repositories.SupportRequestRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +22,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,14 +32,26 @@ public class SupportRequestService {
     private final TelegramMessageService messageService;
     private final SupportRequestRepository supportRequestRepository;
     private final ModeratorsService moderatorsService;
+    private final TelegramMessageMapper messageMapper;
+    private final SupportRequestMapper supportRequestMapper;
 
     public SupportRequest getSupportRequestById(Long id) {
-        return supportRequestRepository.findById(id)
+        var request = supportRequestRepository.findById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
-                                "Wrong supportrequest id [%s]".formatted(id))
+                                "Wrong support request id [%s]".formatted(id))
                 );
-    }
+        // Принудительная инициализация списка сообщений и отправителей
+        request.getMessages().forEach(message -> {
+            if (message.getSender() != null) {
+                Hibernate.initialize(message.getSender());
+            }
+            // Также нужно инициализировать медиафайлы!
+            if (message.getMediaFiles() != null) {
+                Hibernate.initialize(message.getMediaFiles());
+            }
+        });
+        return request;    }
 
     public SupportRequest getSupportRequestByIdWithMessages(Long id) {
         var request = supportRequestRepository.findById(id)
@@ -168,5 +187,155 @@ public class SupportRequestService {
 
     public List<SupportRequest> getPreviousRequestsByAuthor(Long authorId, Long currentRequestId) {
         return supportRequestRepository.findByAuthorIdAndIdNotOrderByLastMessageAtDesc(authorId, currentRequestId);
+    }
+
+    // ----------------------------------------------------------------------
+    // --- ЛОГИКА ДЛЯ ГРУППИРОВКИ АЛЬБОМОВ (для отображения в CRM) ---
+    // ----------------------------------------------------------------------
+
+    /**
+     * Преобразует список сущностей сообщений в список DTO, объединяя медиа-альбомы
+     * в одно логическое DTO для корректного отображения в CRM.
+     * * @param rawMessageEntities Список сущностей TelegramMessage.
+     * @return Список TelegramMessageDto, готовый для передачи в Thymeleaf.
+     */
+    @Transactional(readOnly = true)
+    public List<TelegramMessageDto> processAndGroupMessages(List<TelegramMessage> rawMessageEntities) {
+        if (rawMessageEntities == null || rawMessageEntities.isEmpty()) {
+            return List.of();
+        }
+
+        // 1. Маппим сущности в DTO. На этом этапе DTO содержит List<TelegramMediaDto> mediaFiles.
+        List<TelegramMessageDto> rawMessagesDto = messageMapper.toDtoList(rawMessageEntities);
+
+        //Фильтруем, оставляем только превью
+        List<TelegramMessageDto> filteredMessagesDto = rawMessagesDto.stream()
+                .map(messageDto -> {
+                    if (messageDto.mediaFiles() == null) {
+                        return messageDto;
+                    }
+
+                    // Отфильтровываем медиафайлы: оставляем только PREVIEW
+                    List<TelegramMediaDto> previews = messageDto.mediaFiles().stream()
+                            // Проверяем, что usageType не null, и соответствует PREVIEW
+                            .filter(mediaDto -> mediaDto.usageType() != null && mediaDto.usageType().equals(TelegramMediaUsageType.PREVIEW))
+                            .collect(Collectors.toList());
+
+                    // Возвращаем новый DTO с отфильтрованным списком медиа.
+                    return messageDto.withMediaFiles(previews);
+                })
+                .collect(Collectors.toList());
+
+
+        // 2. Группируем DTO по mediaGroupId
+        Map<String, List<TelegramMessageDto>> groupedByMediaId = filteredMessagesDto.stream()
+                .collect(Collectors.groupingBy(
+                        // Используем mediaGroupId, или "null" для одиночных сообщений
+                        msg -> msg.mediaGroupId() != null ? msg.mediaGroupId() : "null"
+                ));
+
+        List<TelegramMessageDto> processedMessages = new ArrayList<>();
+
+        // 3. Обрабатываем каждую группу
+        for (Map.Entry<String, List<TelegramMessageDto>> entry : groupedByMediaId.entrySet()) {
+            String groupId = entry.getKey();
+            List<TelegramMessageDto> groupMessages = entry.getValue();
+
+            if ("null".equals(groupId) || groupMessages.size() == 1) {
+                // Это не альбом или одиночное сообщение: просто добавляем его.
+                processedMessages.addAll(groupMessages);
+            } else {
+                // Это альбом (группа сообщений с одинаковым mediaGroupId)
+                TelegramMessageDto mergedMessage = mergeAlbumMessages(groupMessages);
+                if (mergedMessage != null) {
+                    processedMessages.add(mergedMessage);
+                }
+            }
+        }
+
+        // 4. Сортируем по времени, так как группировка могла нарушить порядок
+        processedMessages.sort(Comparator.comparing(TelegramMessageDto::sentAt).reversed());
+
+        return processedMessages;
+    }
+
+    /**
+     * Объединяет список DTO-сообщений Telegram, принадлежащих к одному альбому.
+     */
+    private TelegramMessageDto mergeAlbumMessages(List<TelegramMessageDto> albumMessages) {
+        if (albumMessages.isEmpty()) {
+            return null;
+        }
+
+        // --- СЛУЖЕБНЫЙ ТЕКСТ В БД, КОТОРЫЙ НУЖНО ИГНОРИРОВАТЬ ---
+        //Это те изображения галереи, которые в оригинале в телеграм не содержат подписей
+        final String SERVICE_CAPTION = "[картинка без подписи]";
+
+        // 1. Находим сообщение, которое будет "основным" (то, где есть оригинальная подпись)
+
+        // Ищем ПЕРВОЕ сообщение, у которого текст существует И НЕ РАВЕН служебной фразе.
+        TelegramMessageDto messageWithOriginalCaption = albumMessages.stream()
+                .filter(msg -> msg.messageText() != null
+                        && !msg.messageText().trim().isEmpty()
+                        && !msg.messageText().trim().equals(SERVICE_CAPTION)) // <-- ИСКЛЮЧАЕМ СЛУЖЕБНЫЙ ТЕКСТ
+                .findFirst()
+                .orElse(null);
+
+        // Если подпись найдена, используем это сообщение как основное.
+        // Если не найдена (вся группа без подписи или со служебной подписью), берем первое сообщение.
+        TelegramMessageDto primaryMessage = (messageWithOriginalCaption != null)
+                ? messageWithOriginalCaption
+                : albumMessages.get(0);
+
+        // 2. Собираем все медиафайлы из всех сообщений альбома
+        List<TelegramMediaDto> allMedia = albumMessages.stream()
+                .flatMap(msg -> {
+                    // ИСПОЛЬЗУЕМ Stream.empty() ВМЕСТО null
+                    if (msg.mediaFiles() != null) {
+                        return msg.mediaFiles().stream();
+                    } else {
+                        return java.util.stream.Stream.empty();
+                    }
+                })
+                .filter(Objects::nonNull) // Оставим на всякий случай, но теперь он не нужен
+                .collect(Collectors.toList());
+        // 3. Строим объединенное DTO (используем конструктор record)
+        return new TelegramMessageDto(
+                primaryMessage.telegramMessageId(),
+                primaryMessage.messageText(),
+                primaryMessage.sender(),
+                primaryMessage.authorName(),
+                primaryMessage.chatId(),
+                primaryMessage.sentAt(),
+                primaryMessage.isEdited(),
+                true, // Это альбом, поэтому isMedia = true
+                primaryMessage.supportRequestId(),
+                primaryMessage.replyToMessageId(),
+                primaryMessage.mediaGroupId(),
+                allMedia // Передаем объединенный список медиа
+        );
+    }
+
+    /**
+     * Основной метод для получения SupportRequestDto, готового для Thymeleaf.
+     */
+    @Transactional(readOnly = true)
+    public SupportRequestDto getSupportRequestDtoForDisplay(Long requestId) {
+        // 1. Загружаем сущность с инициализированными сообщениями и медиа.
+        SupportRequest request = getSupportRequestById(requestId); // Используем ваш метод загрузки!
+
+        // 2. Получаем сырой список сущностей сообщений
+        List<TelegramMessage> rawMessages = request.getMessages();
+
+        // 3. ОБРАБАТЫВАЕМ И ГРУППИРУЕМ СООБЩЕНИЯ
+        List<TelegramMessageDto> processedMessages = processAndGroupMessages(rawMessages);
+
+        // 4. Маппим основную сущность в DTO (без сообщений, т.к. мы игнорировали их в маппере)
+        SupportRequestDto requestDto = supportRequestMapper.toDto(request);
+
+        // 5. Создаем финальную DTO, добавляя обработанный список сообщений
+        // (Этот метод withMessages() должен быть в вашем record SupportRequestDto)
+        var finalDto = requestDto.withMessages(processedMessages);
+        return finalDto;
     }
 }

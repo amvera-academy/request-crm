@@ -21,6 +21,9 @@ public class TelegramMessage {
     @Column(name = "telegram_message_id", unique = true)
     private Integer telegramMessageId;
 
+    @Column(name = "media_group_id") //для альбомов
+    private String mediaGroupId;
+
     @Column(name = "message_text")
     private String messageText;
 
