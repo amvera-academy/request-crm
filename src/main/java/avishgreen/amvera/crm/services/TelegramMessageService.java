@@ -20,11 +20,11 @@ public class TelegramMessageService {
 
 
     @Transactional
-    public void saveBotMessage(TelegramMessage message){
+    public TelegramMessage saveBotMessage(TelegramMessage message){
         var sender = userService.getOrCreateBot();
         message.setSender(sender);
 
-        messageRepository.save(message);
+        return messageRepository.save(message);
     }
 
     @Transactional

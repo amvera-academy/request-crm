@@ -101,7 +101,12 @@ public class TelegramSenderService {
             crmMessage.setTelegramMessageId(sentMessage.getMessageId());
             crmMessage.setSupportRequest(request);
 
-            telegramMessageService.saveBotMessage(crmMessage);
+            crmMessage = telegramMessageService.saveBotMessage(crmMessage);
+
+            //Обновление полей последнего сообщения
+            request.setLastMessage(crmMessage);
+            request.setLastMessageAt(crmMessage.getSentAt());
+
             log.info("Reply successfully sent for request ID {} after {} attempt(s).", supportRequestId, successfullyTriedCount);
         } else {
             // Если sentMessage == null, значит, все сообщения удалены.
