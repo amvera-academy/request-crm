@@ -108,8 +108,60 @@ function initializeMessageSending() {
 }
 
 
-// Центральная точка входа для логики страницы
+// --- ЛОГИКА LIGHTBOX ---
+function initializeLightbox() {
+    const modal = document.getElementById('lightbox-modal');
+    const modalImg = document.getElementById('lightbox-image');
+    const closeBtn = document.querySelector('.lightbox-close');
+
+    if (!modal || !modalImg || !closeBtn) {
+        console.warn("Lightbox elements not found. Skipping initialization.");
+        return;
+    }
+
+    // Выбираем все ссылки с классом .js-open-lightbox
+    const mediaLinks = document.querySelectorAll('.js-open-lightbox');
+
+    mediaLinks.forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault(); // Предотвращаем переход по ссылке
+
+            // Получаем полный URL изображения из атрибута href
+            const fullsizeUrl = this.getAttribute('href');
+
+            // Устанавливаем изображение в модальное окно
+            modalImg.src = fullsizeUrl;
+
+            // Отображаем модальное окно
+            modal.style.display = "block";
+        });
+    });
+
+    // Обработчик для кнопки закрытия
+    closeBtn.onclick = function() {
+        modal.style.display = "none";
+    };
+
+    // Закрытие при клике вне изображения
+    modal.onclick = function(event) {
+        // Закрываем, только если клик был по самому модальному окну (не по содержимому)
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    };
+
+    // Закрытие по клавише ESC
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "Escape" && modal.style.display === "block") {
+            modal.style.display = "none";
+        }
+    });
+}
+
+
+// Центральная точка входа для логики страницы (ОБНОВЛЕННАЯ)
 document.addEventListener('DOMContentLoaded', function() {
     initializeNoteSaving();
     initializeMessageSending();
+    initializeLightbox(); // <-- ДОБАВЛЯЕМ ИНИЦИАЛИЗАЦИЮ LIGHTBOX
 });

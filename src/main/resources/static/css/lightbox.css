@@ -1,0 +1,62 @@
+/* LIGHTBOX STYLES */
+.lightbox-modal {
+    display: none; /* Скрыто по умолчанию */
+    position: fixed; /* Поверх всего */
+    z-index: 1000; /* Высокий индекс, чтобы быть поверх других элементов */
+    padding-top: 50px; /* Немного отступа сверху */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* Включение прокрутки, если изображение слишком большое */
+    background-color: rgb(0,0,0); /* Черный цвет */
+    background-color: rgba(0,0,0,0.9); /* Черный с прозрачностью */
+}
+
+.lightbox-content {
+    margin: auto;
+    display: block;
+    width: 90%;
+    max-width: 900px; /* Ограничиваем максимальную ширину */
+    max-height: 90vh; /* Ограничиваем максимальную высоту 90% от высоты видимой области */
+}
+
+/* Кнопка закрытия */
+.lightbox-close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.lightbox-close:hover,
+.lightbox-close:focus {
+    color: #bbb;
+}
+
+/* Анимация (необязательно) */
+.lightbox-content, #lightbox-caption {
+    -webkit-animation-name: zoom;
+    -webkit-animation-duration: 0.6s;
+    animation-name: zoom;
+    animation-duration: 0.6s;
+}
+
+@-webkit-keyframes zoom {
+    from {-webkit-transform:scale(0)}
+    to {-webkit-transform:scale(1)}
+}
+
+@keyframes zoom {
+    from {transform:scale(0)}
+    to {transform:scale(1)}
+}
+
+/* Стиль для превью (чтобы они выглядели как ссылка) */
+.media-item a {
+    cursor: zoom-in;
+}

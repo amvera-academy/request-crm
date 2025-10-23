@@ -30,9 +30,8 @@ public class MediaController {
      * @param mediaId ID сущности TelegramMedia.
      * @return Ответ с содержимым файла и HTTP-заголовками.
      */
-    @GetMapping("/media/{mediaId}")
-    public ResponseEntity<byte[]> getMediaContent(@PathVariable Long mediaId) {
-
+// Вспомогательный метод для уменьшения дублирования кода
+    private ResponseEntity<byte[]> getMediaResponse(Long mediaId, boolean isOriginal) {
         try (InputStream inputStream = telegramMediaService.downloadMediaContent(mediaId)) {
 
             // Предполагаем, что для фото всегда отдаем JPEG.
@@ -62,5 +61,17 @@ public class MediaController {
             // Возвращаем 503 Service Unavailable, указывая на временную проблему
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Сервер Telegram недоступен. Повторите попытку позже.", e);
         }
+    }
+
+    /** Эндпоинт для получения миниатюры */
+    @GetMapping("/media/preview/{mediaId}")
+    public ResponseEntity<byte[]> getMediaPreview(@PathVariable Long mediaId) {
+        return getMediaResponse(mediaId, false); // false = не оригинал (превью)
+    }
+
+    /** Эндпоинт для получения полного размера */
+    @GetMapping("/media/fullsize/{mediaId}")
+    public ResponseEntity<byte[]> getMediaFullsize(@PathVariable Long mediaId) {
+        return getMediaResponse(mediaId, true); // true = оригинал
     }
 }

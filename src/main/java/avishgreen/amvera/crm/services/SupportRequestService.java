@@ -1,5 +1,6 @@
 package avishgreen.amvera.crm.services;
 
+import avishgreen.amvera.crm.dto.DisplayMediaDto;
 import avishgreen.amvera.crm.dto.SupportRequestDto;
 import avishgreen.amvera.crm.dto.TelegramMediaDto;
 import avishgreen.amvera.crm.dto.TelegramMessageDto;
@@ -8,6 +9,7 @@ import avishgreen.amvera.crm.entities.TelegramMessage;
 import avishgreen.amvera.crm.entities.TelegramUser;
 import avishgreen.amvera.crm.enums.SupportRequestStatusType;
 import avishgreen.amvera.crm.enums.TelegramMediaUsageType;
+import avishgreen.amvera.crm.mappers.DisplayMediaMapper;
 import avishgreen.amvera.crm.mappers.SupportRequestMapper;
 import avishgreen.amvera.crm.mappers.TelegramMessageMapper;
 import avishgreen.amvera.crm.repositories.SupportRequestRepository;
@@ -34,6 +36,7 @@ public class SupportRequestService {
     private final ModeratorsService moderatorsService;
     private final TelegramMessageMapper messageMapper;
     private final SupportRequestMapper supportRequestMapper;
+    private final DisplayMediaMapper displayMediaMapper;
 
     public SupportRequest getSupportRequestById(Long id) {
         var request = supportRequestRepository.findById(id)
@@ -132,7 +135,7 @@ public class SupportRequestService {
                         .max(Comparator.comparing(SupportRequest::getLastMessageAt, Comparator.nullsFirst(Comparator.naturalOrder())))
                         .orElseThrow(() -> new IllegalStateException("Список запросов пуст или неожиданно пуст."));
             } else {
-                log.error("No active requests found for user {} in chat {}. Statuses checked: {}.",
+                log.warn("No active requests found for user {} in chat {}. Statuses checked: {}.",
                         user.getId(), chatId, closedStatuses);
             }
         }
@@ -205,30 +208,23 @@ public class SupportRequestService {
             return List.of();
         }
 
-        // 1. Маппим сущности в DTO. На этом этапе DTO содержит List<TelegramMediaDto> mediaFiles.
-        List<TelegramMessageDto> rawMessagesDto = messageMapper.toDtoList(rawMessageEntities);
+// 1. Создаем DTO сообщений и агрегируем медиафайлы (DisplayMediaDto)
+        List<TelegramMessageDto> processedMessagesDto = rawMessageEntities.stream()
+                .map(messageEntity -> {
+                    // А. Маппим сущность сообщения в его DTO, игнорируя List<TelegramMedia>
+                    TelegramMessageDto messageDto = messageMapper.toDto(messageEntity); // mediaFiles = null
 
-        //Фильтруем, оставляем только превью
-        List<TelegramMessageDto> filteredMessagesDto = rawMessagesDto.stream()
-                .map(messageDto -> {
-                    if (messageDto.mediaFiles() == null) {
-                        return messageDto;
-                    }
+                    // Б. АГРЕГАЦИЯ МЕДИА: Преобразуем List<TelegramMedia> (сущности) в List<DisplayMediaDto>
+                    // mediaFiles - это поле сущности TelegramMessage
+                    List<DisplayMediaDto> displayMedia = displayMediaMapper.mapToDisplayDto(messageEntity.getMediaFiles());
 
-                    // Отфильтровываем медиафайлы: оставляем только PREVIEW
-                    List<TelegramMediaDto> previews = messageDto.mediaFiles().stream()
-                            // Проверяем, что usageType не null, и соответствует PREVIEW
-                            .filter(mediaDto -> mediaDto.usageType() != null && mediaDto.usageType().equals(TelegramMediaUsageType.PREVIEW))
-                            .collect(Collectors.toList());
-
-                    // Возвращаем новый DTO с отфильтрованным списком медиа.
-                    return messageDto.withMediaFiles(previews);
+                    // В. Устанавливаем агрегированный список в DTO
+                    return messageDto.withMediaFiles(displayMedia);
                 })
                 .collect(Collectors.toList());
 
-
         // 2. Группируем DTO по mediaGroupId
-        Map<String, List<TelegramMessageDto>> groupedByMediaId = filteredMessagesDto.stream()
+        Map<String, List<TelegramMessageDto>> groupedByMediaId = processedMessagesDto.stream()
                 .collect(Collectors.groupingBy(
                         // Используем mediaGroupId, или "null" для одиночных сообщений
                         msg -> msg.mediaGroupId() != null ? msg.mediaGroupId() : "null"
@@ -287,8 +283,9 @@ public class SupportRequestService {
                 ? messageWithOriginalCaption
                 : albumMessages.get(0);
 
-        // 2. Собираем все медиафайлы из всех сообщений альбома
-        List<TelegramMediaDto> allMedia = albumMessages.stream()
+        // 2. Собираем все медиафайлы (DisplayMediaDto) из всех сообщений альбома
+        // Здесь мы собираем агрегированный DisplayMediaDto, а не старый TelegramMediaDto!
+            List<DisplayMediaDto> allMedia = albumMessages.stream()
                 .flatMap(msg -> {
                     // ИСПОЛЬЗУЕМ Stream.empty() ВМЕСТО null
                     if (msg.mediaFiles() != null) {
@@ -299,6 +296,7 @@ public class SupportRequestService {
                 })
                 .filter(Objects::nonNull) // Оставим на всякий случай, но теперь он не нужен
                 .collect(Collectors.toList());
+
         // 3. Строим объединенное DTO (используем конструктор record)
         return new TelegramMessageDto(
                 primaryMessage.telegramMessageId(),
@@ -312,7 +310,7 @@ public class SupportRequestService {
                 primaryMessage.supportRequestId(),
                 primaryMessage.replyToMessageId(),
                 primaryMessage.mediaGroupId(),
-                allMedia // Передаем объединенный список медиа
+                allMedia // <--- Передаем объединенный список DisplayMediaDto
         );
     }
 

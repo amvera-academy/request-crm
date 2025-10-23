@@ -61,4 +61,11 @@ public class TelegramMedia {
     @Column(name = "usage_type", length = 20)
     @Enumerated(EnumType.STRING)
     private TelegramMediaUsageType usageType; // Значения: "PREVIEW" или "FULL_SIZE"
+
+    /**
+     * Пользовательский ID для группировки PREVIEW и FULL_SIZE одной фотографии.
+     * Генерируется при сохранении первого размера и используется для всех остальных.
+     */
+    @Column(name = "media_group_uuid", length = 36, nullable = false)
+    private String mediaGroupUuid;
 }

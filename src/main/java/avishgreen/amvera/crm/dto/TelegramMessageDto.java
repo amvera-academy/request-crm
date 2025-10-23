@@ -15,10 +15,10 @@ public record TelegramMessageDto(
         Long supportRequestId,
         Long replyToMessageId,
         String mediaGroupId,
-        List<TelegramMediaDto> mediaFiles
+        List<DisplayMediaDto> mediaFiles //используем агрегированное дто
 ) {
     // Вспомогательный метод для создания новой копии с измененным списком медиа
-    public TelegramMessageDto withMediaFiles(List<TelegramMediaDto> newMediaList) {
+    public TelegramMessageDto withMediaFiles(List<DisplayMediaDto> newMediaList) {
         return new TelegramMessageDto(
                 this.telegramMessageId(),
                 this.messageText(),

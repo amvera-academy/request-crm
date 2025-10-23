@@ -7,6 +7,7 @@
     <title th:text="${pageTitle}"></title>
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/support.css}">
+    <link rel="stylesheet" th:href="@{/css/lightbox.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
     <script type="module" th:src="@{/js/global.js}"></script>
@@ -62,15 +63,16 @@
                 <div th:each="mediaItem : ${message.mediaFiles}" class="message-media-container">
 
                     <div th:if="${!mediaItem.deletedByTelegram}">
-                        <div th:with="displayId=${mediaItem.id}, linkId=${mediaItem.id}">
-                            <div class="media-item">
-                                <a th:href="@{/media/{mediaId}(mediaId=${linkId})}" target="_blank" title="Открыть полный размер">
-                                    <img th:src="@{/media/{mediaId}(mediaId=${displayId})}"
-                                         alt="Превью изображения"
-                                         class="media-image"
-                                    />
-                                </a>
-                            </div>
+                        <div class="media-item">
+                            <a th:href="@{/media/fullsize/{mediaId}(mediaId=${mediaItem.fullsizeMediaId})}"
+                               class="js-open-lightbox"
+                               title="Открыть полный размер">
+
+                                <img th:src="@{/media/preview/{mediaId}(mediaId=${mediaItem.previewMediaId})}"
+                                     alt="Превью изображения"
+                                     class="media-image"
+                                />
+                            </a>
                         </div>
                     </div>
 
@@ -160,6 +162,10 @@
 </div>
 
 <div id="bottom"></div>
-
+<div id="lightbox-modal" class="lightbox-modal">
+    <span class="lightbox-close">&times;</span>
+    <img class="lightbox-content" id="lightbox-image">
+    <div id="lightbox-caption"></div>
+</div>
 </body>
 </html>

@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -58,30 +59,13 @@ public class TelegramMediaService {
         PhotoSize smallestPhoto = smallestPhotoOpt.get();
         PhotoSize largestPhoto = largestPhotoOpt.get();
 
-        // 1. Сохраняем PREVIEW версию (самую маленькую)
-        saveMediaMetadata(smallestPhoto, telegramMessage, TelegramMediaUsageType.PREVIEW);
+        // Генерируем уникальный ID для логической медиа-группы
+        final String mediaGroupUuid = UUID.randomUUID().toString();
 
-        // 2. Сохраняем FULL_SIZE версию (самую большую)
-        // Проверяем, отличается ли FULL_SIZE от PREVIEW (по fileId, который уникален для каждой версии).
-        // Если fileId одинаковые, значит, Telegram не предоставил разных разрешений.
-        if (!largestPhoto.getFileId().equals(smallestPhoto.getFileId())) {
-            saveMediaMetadata(largestPhoto, telegramMessage, TelegramMediaUsageType.FULL_SIZE);
-        }
+        // 1. Сохраняем PREVIEW версию
+        var photoSize = smallestPhoto;
+        var usageType = TelegramMediaUsageType.PREVIEW;
 
-        // Обновляем флаг isMedia в родительском сообщении для оптимизации запросов.
-        // Это требует, чтобы TelegramMessage был либо передан с актуальными данными,
-        // либо был сохранен после этого в TelegramMessageService.
-        if (Boolean.FALSE.equals(telegramMessage.getIsMedia())) {
-            telegramMessage.setIsMedia(true);
-            // Если telegramMessage - это управляемая сущность,
-            // Spring автоматически сохранит это изменение при выходе из @Transactional.
-        }
-    }
-
-    /**
-     * Сохраняет метаданные одного PhotoSize в базу данных.
-     */
-    private void saveMediaMetadata(PhotoSize photoSize, TelegramMessage message, TelegramMediaUsageType usageType) {
         TelegramMedia media = TelegramMedia.builder()
                 .telegramFileId(photoSize.getFileId())
                 .fileUniqueId(photoSize.getFileUniqueId())
@@ -92,10 +76,45 @@ public class TelegramMediaService {
                 .height(photoSize.getHeight())
                 .isDeletedByTelegram(false)
                 .usageType(usageType)
-                .message(message)
+                .message(telegramMessage)
+                .mediaGroupUuid(mediaGroupUuid)
                 .build();
 
         mediaRepository.save(media);
+
+        // 2. Сохраняем FULL_SIZE версию (самую большую)
+        // Проверяем, отличается ли FULL_SIZE от PREVIEW (по fileId, который уникален для каждой версии).
+        // Если fileId одинаковые, значит, Telegram не предоставил разных разрешений.
+        if (!largestPhoto.getFileId().equals(smallestPhoto.getFileId())) {
+            photoSize = largestPhoto;
+            usageType = TelegramMediaUsageType.FULL_SIZE;
+
+            media = TelegramMedia.builder()
+                    .telegramFileId(photoSize.getFileId())
+                    .fileUniqueId(photoSize.getFileUniqueId())
+                    // Для PhotoSize mimeType не передается явно, но это всегда JPEG
+                    .mimeType("image/jpeg")
+                    .fileSize(photoSize.getFileSize())
+                    .width(photoSize.getWidth())
+                    .height(photoSize.getHeight())
+                    .isDeletedByTelegram(false)
+                    .usageType(usageType)
+                    .message(telegramMessage)
+                    .mediaGroupUuid(mediaGroupUuid)
+
+                    .build();
+
+            mediaRepository.save(media);
+        }
+
+        // Обновляем флаг isMedia в родительском сообщении для оптимизации запросов.
+        // Это требует, чтобы TelegramMessage был либо передан с актуальными данными,
+        // либо был сохранен после этого в TelegramMessageService.
+        if (Boolean.FALSE.equals(telegramMessage.getIsMedia())) {
+            telegramMessage.setIsMedia(true);
+            // Если telegramMessage - это управляемая сущность,
+            // Spring автоматически сохранит это изменение при выходе из @Transactional.
+        }
     }
 
     /**
