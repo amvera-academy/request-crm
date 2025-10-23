@@ -33,3 +33,15 @@ databaseChangeLog:
             path: 002/dn-05-alter-table-telegram-media.sql
             relativeToChangeLogFile: "true"
 
+  - changeSet:
+      id: 251023-table-app-users
+      author: avishgreen@gmail.com
+      changes:
+        - sqlFile:
+            path: 002/up-07-alter-table-app-users.sql
+            relativeToChangeLogFile: "true"
+      rollback:
+        - sqlFile:
+            path: 002/dn-07-alter-table-app-users.sql
+            relativeToChangeLogFile: "true"
+

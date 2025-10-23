@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle}">Редактирование пользователя</title>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/users-list.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        /* Временные стили для формы, в идеале добавить в users-list.css или отдельный файл */
+        .edit-form { max-width: 500px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .form-actions { margin-top: 20px; display: flex; justify-content: space-between; }
+        .btn-save { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-cancel { background-color: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header(${pageTitle})}"></div>
+
+<div class="container">
+
+    <h2><i class="fas fa-user-edit"></i> Редактирование пользователя: <span th:text="${user.username}"></span></h2>
+
+    <form th:action="@{/admin/user/{id}/edit(id=${user.id})}" th:object="${user}" method="post" class="edit-form">
+
+        <input type="hidden" th:field="*{id}" />
+
+        <div class="form-group">
+            <label for="username">Никнейм (Логин):</label>
+            <input type="text" id="username" th:field="*{username}" required />
+        </div>
+
+        <div class="form-group">
+            <label for="role">Роль:</label>
+            <select id="role" th:field="*{role}">
+                <option th:each="role : ${availableRoles}"
+                        th:value="${role}"
+                        th:text="${role}"
+                        th:selected="${role == user.role}"></option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="isEnabled">Активен (Может войти в систему):</label>
+            <div>
+                <input type="checkbox"
+                       id="isEnabled"
+                       name="enabled"  value="true"
+                       th:checked="${user.enabled}"
+                />
+                <input type="hidden" name="_enabled" value="on" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="botToken">Токен Бота (для ответов в чате):</label>
+            <input type="text" id="botToken" th:field="*{botToken}">
+        </div>
+
+        <div class="form-actions">
+            <a th:href="@{/admin/users-list}" class="btn-cancel">Отмена</a>
+            <button type="submit" class="btn-save"><i class="fas fa-save"></i> Сохранить изменения</button>
+        </div>
+    </form>
+
+    <hr/>
+
+    <div class="center-content" style="margin-top: 20px;">
+        <a th:href="@{/admin/user/{id}/reset-password(id=${user.id})}" style="color: #dc3545;">
+            <i class="fas fa-key"></i> Сбросить Пароль
+        </a>
+    </div>
+
+</div>
+
+</body>
+</html>

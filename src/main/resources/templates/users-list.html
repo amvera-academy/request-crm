@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle}">Управление Пользователями</title>
+
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+
+    <link rel="stylesheet" th:href="@{/css/users-list.css}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+</head>
+
+<body>
+
+<div th:replace="~{fragments/header :: header(${pageTitle})}"></div>
+
+<div class="container">
+
+    <h2>Список Пользователей</h2>
+
+    <a th:href="@{/admin/users/create}" class="add-button">
+        <i class="fas fa-user-plus"></i> Добавить Нового Модератора
+    </a>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Никнейм</th>
+            <th>Роль</th>
+            <th>Активен</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}">1</td>
+            <td th:text="${user.username}">admin_user</td>
+            <td th:text="${user.role}">ADMIN</td>
+
+            <td>
+                        <span th:if="${user.isEnabled()}" class="status-enabled">
+                            <i class="fas fa-check-circle"></i> Да
+                        </span>
+                <span th:unless="${user.isEnabled()}" class="status-disabled">
+                            <i class="fas fa-times-circle"></i> Нет
+                        </span>
+            </td>
+
+            <td>
+                <a th:href="@{/admin/user/{id}/edit(id=${user.id})}">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+                |
+                <a th:href="@{/admin/user/{id}/reset-password(id=${user.id})}">
+                    <i class="fas fa-key"></i> Сброс Пароля
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+</body>
+</html>

@@ -2,11 +2,25 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <div th:fragment="header(pageTitle)" class="header-container">
     <div class="header-content">
+
         <h1 th:if="${pageTitle}" th:text="${pageTitle}" class="header-title"></h1>
+
+        <div class="header-nav-icons">
+            <a th:href="@{/}" title="На главную">
+                <i class="fa-solid fa-house header-icon"></i>
+            </a>
+
+            <a th:href="@{/admin}" title="Панель администратора">
+                <i class="fa-solid fa-user-gear header-icon"></i>
+            </a>
+        </div>
+
         <div class="header-user-info">
             <p><span th:text="${username}">username</span></p>
             <form th:action="@{/logout}" method="post">
-                <button type="submit"> <span class="logout-icon"><i class="fa-solid fa-door-open"></i></span> Выход</button>
+                <button type="submit">
+                    <span class="logout-icon"><i class="fa-solid fa-door-open"></i></span> Выход
+                </button>
             </form>
         </div>
     </div>

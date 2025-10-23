@@ -71,3 +71,39 @@ a:hover {
     font-size: 1.2em;
     margin-right: 5px;
 }
+
+/* ================== Стили для шапки (header) - ДОПОЛНЕНИЯ ================== */
+
+/* Изменяем отображение header-content, чтобы иметь больше контроля над расположением элементов */
+.header-content {
+    display: flex;
+    justify-content: space-between; /* Распределение пространства между заголовком и правыми элементами */
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Контейнер для навигационных иконок */
+.header-nav-icons {
+    /* Чтобы иконки были сразу после заголовка, а не слева от него:
+       Вставьте этот блок между h1 и header-user-info в HTML. */
+    display: flex;
+    gap: 15px; /* Расстояние между иконками */
+    margin-left: 20px;
+}
+
+.header-icon {
+    font-size: 1.5em; /* Размер иконки */
+    color: #333; /* Цвет иконки */
+    transition: color 0.2s;
+}
+
+.header-icon:hover {
+    color: #007bff; /* Цвет при наведении */
+}
+
+/* Переносим header-user-info вправо, чтобы он был рядом с иконками */
+.header-user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+ }

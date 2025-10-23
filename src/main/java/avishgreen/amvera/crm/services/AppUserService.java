@@ -8,6 +8,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AppUserService implements UserDetailsService {
@@ -31,9 +33,35 @@ public class AppUserService implements UserDetailsService {
         appUserRepository.save(user);
     }
 
+    /**
+     * Обновляет данные пользователя (никнейм, роль, статус активности).
+     * @param id ID пользователя.
+     * @param updatedUser Обновленные данные пользователя из формы.
+     */
+    public void updateUser(Long id, AppUser updatedUser) {
+        AppUser user = appUserRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + id));
+
+        // Обновление основных полей
+        user.setUsername(updatedUser.getUsername());
+        user.setRole(updatedUser.getRole());
+        user.setEnabled(updatedUser.isEnabled());
+        user.setBotToken(updatedUser.getBotToken());
+
+        appUserRepository.save(user);
+    }
+
     public AppUser findById(Long id) {
         return appUserRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + id));
     }
+
+    /**
+     * Возвращает список всех пользователей из базы данных.
+     */
+    public List<AppUser> findAll() {
+        return appUserRepository.findAll();
+    }
+
 
 }

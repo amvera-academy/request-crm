@@ -1,0 +1,65 @@
+/* users-list.css */
+
+/* ================== Стили для страницы списка пользователей ================== */
+
+.container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+/* Стили для кнопки добавления */
+.add-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.add-button:hover {
+    background-color: #45a049;
+    text-decoration: none;
+}
+
+/* Стили для таблицы */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Стили для строк действий */
+td a {
+    margin-right: 10px;
+}
+
+td a:last-child {
+    margin-right: 0;
+}
+
+/* Стили для статуса активности */
+.status-enabled {
+    color: #28a745; /* Зеленый */
+    font-weight: bold;
+}
+
+.status-disabled {
+    color: #dc3545; /* Красный */
+    font-weight: bold;
+}

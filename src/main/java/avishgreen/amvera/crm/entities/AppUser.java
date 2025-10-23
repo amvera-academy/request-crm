@@ -44,6 +44,9 @@ public class AppUser implements UserDetails {
     @Column(name = "is_enabled", nullable = false)
     private boolean isEnabled;
 
+    @Column(name = "bot_token", length = 255)
+    private String botToken;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role));

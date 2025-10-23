@@ -22,7 +22,11 @@ public class SecurityConfig {
         http
                 // Настраиваем авторизацию запросов
                 .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().authenticated() // Все запросы требуют аутентификации
+                                // 1. Только пользователи с ролью ROLE_ADMIN имеют доступ ко всем путям /admin/**
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                                // 2. Все остальные запросы требуют только аутентификации (входа в систему)
+                                .anyRequest().authenticated() // Все запросы требуют аутентификации
                 )
                 .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
                 .logout(LogoutConfigurer::permitAll);
