@@ -158,10 +158,28 @@ function initializeLightbox() {
     });
 }
 
+/**
+ * Инициализирует функциональность разворачивания сообщений.
+ * По клику на message-bubble добавляет/удаляет класс 'expanded'.
+ */
+function initMessageExpansion() {
+    // Выбираем все баблы сообщений
+    const messageBubbles = document.querySelectorAll('.message-bubble');
+
+    messageBubbles.forEach(bubble => {
+        // Добавляем обработчик события клика
+        bubble.addEventListener('click', function() {
+            // Переключаем класс 'expanded'
+            this.classList.toggle('expanded');
+        });
+    });
+}
+
 
 // Центральная точка входа для логики страницы (ОБНОВЛЕННАЯ)
 document.addEventListener('DOMContentLoaded', function() {
     initializeNoteSaving();
     initializeMessageSending();
     initializeLightbox(); // <-- ДОБАВЛЯЕМ ИНИЦИАЛИЗАЦИЮ LIGHTBOX
+    initMessageExpansion();// <-- Инициализируем разворачивание  сообщений
 });
