@@ -1,21 +1,29 @@
 package avishgreen.amvera.crm.services;
 
+import avishgreen.amvera.crm.configs.AppConfig;
 import avishgreen.amvera.crm.entities.AppUser;
+import avishgreen.amvera.crm.factories.TelegramClientFactory;
 import avishgreen.amvera.crm.repositories.AppUserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AppUserService implements UserDetailsService {
 
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TelegramClientFactory telegramClientFactory;
+    private final AppConfig appConfig;
 
     @Override
     public AppUser loadUserByUsername(String username) throws UsernameNotFoundException {

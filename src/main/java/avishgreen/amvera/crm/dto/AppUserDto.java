@@ -9,5 +9,6 @@ public record AppUserDto(
         Long id,
         String username,
         String role,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String botToken
 ) {}

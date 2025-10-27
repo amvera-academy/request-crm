@@ -2,12 +2,12 @@ package avishgreen.amvera.crm.services;
 
 import avishgreen.amvera.crm.configs.AppConfig;
 import avishgreen.amvera.crm.exceptions.TelegramFileNotFoundException;
+import avishgreen.amvera.crm.factories.TelegramClientFactory;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.*;
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatMember;
 import org.telegram.telegrambots.meta.api.methods.pinnedmessages.PinChatMessage;
@@ -23,7 +23,6 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,101 +35,15 @@ import java.io.InputStream;
 @Slf4j // Аннотация Lombok для автоматического создания логгера
 public class TelegramApiService {
 
-    private final TelegramClient telegramClient;
-    private final String botToken;
     private final OkHttpClient httpClientForDownload = new OkHttpClient(); // Отдельный клиент для скачивания
+    private final AppUserService appUserService;
+    private final TelegramClientFactory telegramClientFactory;
+    private final AppConfig appConfig;
 
-    public TelegramApiService(AppConfig appConfig) {
-        this.telegramClient = new OkHttpTelegramClient(appConfig.getTelegram().getToken());
-        this.botToken = appConfig.getTelegram().getToken();
-    }
-
-
-    /**
-     * Отправляет ответное текстовое сообщение в чат.
-     * @param chatId ID чата.
-     * @param text Текст сообщения.
-     * @param answerToMessageId ID сообщения на которое отправить ответ
-     * @return Объект Message, представляющий отправленное сообщение, или null в случае ошибки.
-     */
-    public Message answerMessage(Long chatId, String text,  Integer answerToMessageId) {
-        SendMessage message = new SendMessage(String.valueOf(chatId), text);
-        message.setReplyToMessageId(answerToMessageId);
-        message.setParseMode(ParseMode.HTML); // Можно установить по умолчанию Markdown или HTML
-        return executeSendMessage(message);
-    }
-
-    /**
-     * Отправляет текстовое сообщение в чат.
-     * @param chatId ID чата.
-     * @param text Текст сообщения.
-     * @return Объект Message, представляющий отправленное сообщение, или null в случае ошибки.
-     */
-    public Message sendMessage(Long chatId, String text) {
-        SendMessage message = new SendMessage(String.valueOf(chatId), text);
-        message.setParseMode(ParseMode.HTML); // Можно установить по умолчанию Markdown или HTML
-        return executeSendMessage(message);
-    }
-
-    /**
-     * Отправляет текстовое сообщение с инлайн-клавиатурой.
-     * @param chatId ID чата.
-     * @param text Текст сообщения.
-     * @param keyboard Инлайн-клавиатура.
-     * @return Объект Message, представляющий отправленное сообщение, или null в случае ошибки.
-     */
-    public Message sendMessage(Long chatId, String text, InlineKeyboardMarkup keyboard) {
-        SendMessage message = new SendMessage(String.valueOf(chatId), text);
-        message.setReplyMarkup(keyboard);
-        message.setParseMode(ParseMode.HTML);
-        return executeSendMessage(message);
-    }
-
-    /**
-     * Редактирует текст существующего сообщения.
-     * @param chatId ID чата.
-     * @param messageId ID сообщения, которое нужно отредактировать.
-     * @param newText Новый текст сообщения.
-     * @return True, если успешно, False в случае ошибки.
-     */
-    public boolean editMessageText(Long chatId, Integer messageId, String newText) {
-        EditMessageText editMessageText = EditMessageText.builder()
-                .chatId(String.valueOf(chatId))
-                .messageId(messageId)
-                .text(newText)
-                .parseMode(ParseMode.HTML)
-                .build();
-        return executeEditMessageText1(editMessageText);
-    }
-
-    /**
-     * Редактирует только клавиатуру существующего сообщения.
-     * @param chatId ID чата.
-     * @param messageId ID сообщения, клавиатуру которого нужно отредактировать.
-     * @param newKeyboard Новая инлайн-клавиатура.
-     * @return True, если успешно, False в случае ошибки.
-     */
-    public boolean editMessageReplyMarkup(Long chatId, Integer messageId, InlineKeyboardMarkup newKeyboard) {
-        EditMessageReplyMarkup editMessageReplyMarkup = new EditMessageReplyMarkup();
-        editMessageReplyMarkup.setChatId(String.valueOf(chatId));
-        editMessageReplyMarkup.setMessageId(messageId);
-        editMessageReplyMarkup.setReplyMarkup(newKeyboard);
-        return executeEditMessageReplyMarkup(editMessageReplyMarkup);
-    }
-
-    /**
-     * Отвечает на CallbackQuery, чтобы убрать "часики" с кнопки.
-     * @param callbackQueryId ID коллбэка.
-     * @param text Опциональный текст уведомления (всплывающее уведомление или надпись на кнопке).
-     * @return True, если успешно, False в случае ошибки.
-     */
-    public boolean answerCallbackQuery(String callbackQueryId, String text) {
-        AnswerCallbackQuery answerCallbackQuery = AnswerCallbackQuery.builder()
-                .callbackQueryId(callbackQueryId)
-                .text(text) // Если null, то уведомления не будет
-        // .showAlert(true) // Можно сделать всплывающее окно
-                .build();
-        return executeAnswerCallbackQuery(answerCallbackQuery);
+    public TelegramApiService(AppUserService appUserService, TelegramClientFactory telegramClientFactory, AppConfig appConfig) {
+        this.appUserService = appUserService;
+        this.telegramClientFactory = telegramClientFactory;
+        this.appConfig = appConfig;
     }
 
     // --- Методы для низкоуровневого выполнения, инкапсулирующие TelegramApiException ---
@@ -141,6 +54,10 @@ public class TelegramApiService {
      * @return Объект Message, если отправка успешна, иначе null.
      */
     public Message executeSendMessage(SendMessage sendMessage) {
+        sendMessage.setParseMode(ParseMode.HTML); // Можно установить по умолчанию Markdown или HTML
+
+        var telegramClient = telegramClientFactory.getTelegramClient();
+
         try {
             return telegramClient.execute(sendMessage);
         } catch (TelegramApiRequestException e) {
@@ -181,6 +98,7 @@ public class TelegramApiService {
      * @return True, если успешно, иначе False.
      */
     public boolean executeEditMessageText1(EditMessageText editMessageText) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         try {
             telegramClient.execute(editMessageText); // execute() для EditMessageText возвращает Message или Boolean, в зависимости от версии API
             return true;
@@ -197,6 +115,7 @@ public class TelegramApiService {
      * @return True, если успешно, иначе False.
      */
     public boolean executeEditMessageReplyMarkup(EditMessageReplyMarkup editMessageReplyMarkup) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         try {
             telegramClient.execute(editMessageReplyMarkup); // execute() для EditMessageReplyMarkup возвращает Message или Boolean
             return true;
@@ -213,6 +132,7 @@ public class TelegramApiService {
      * @return True, если успешно, иначе False.
      */
     public boolean executeAnswerCallbackQuery(AnswerCallbackQuery answerCallbackQuery) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         try {
             var res = telegramClient.execute(answerCallbackQuery);
             return true;
@@ -223,6 +143,7 @@ public class TelegramApiService {
     }
 
     public ChatMember executeGetChatMember(GetChatMember getChatMember) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         try {
             return telegramClient.execute(getChatMember);
         } catch (TelegramApiException e) {
@@ -233,6 +154,7 @@ public class TelegramApiService {
     }
 
     public boolean executeMessageReaction(SetMessageReaction messageReaction) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         try {
             return telegramClient.execute(messageReaction);
         } catch (TelegramApiException e) {
@@ -243,6 +165,7 @@ public class TelegramApiService {
     }
 
     public boolean executePinMessage(PinChatMessage pinMessage) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         try {
             return telegramClient.execute(pinMessage);
         } catch (TelegramApiException e) {
@@ -253,6 +176,7 @@ public class TelegramApiService {
     }
 
     public Message executeForwardMessage(ForwardMessage forwardMessage) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         try {
             return telegramClient.execute(forwardMessage);
         } catch (TelegramApiException e) {
@@ -263,6 +187,7 @@ public class TelegramApiService {
     }
 
     public User executeGetMe(GetMe getMe) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         try {
             return telegramClient.execute(getMe);
         } catch (TelegramApiException e) {
@@ -272,6 +197,7 @@ public class TelegramApiService {
     }
 
     public boolean editMessageTextAndReplyMarkup(Long chatId, Integer messageId, String newText, InlineKeyboardMarkup newKeyboard) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         // Редактируем текст. Возвращает true, если успешно.
         boolean result;
         try {
@@ -292,6 +218,7 @@ public class TelegramApiService {
     }
 
     public boolean deleteMessage(Long chatId, Integer messageId) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         boolean result;
         try {
             var deleteMessage = DeleteMessage.builder()
@@ -315,6 +242,7 @@ public class TelegramApiService {
      * @return Объект File, содержащий метаданные, или null в случае ошибки.
      */
     public File getFile(String fileId) {
+        var telegramClient = telegramClientFactory.getTelegramClient();
         GetFile getFileMethod = GetFile.builder().fileId(fileId).build();
         try {
             return telegramClient.execute(getFileMethod);
@@ -336,7 +264,8 @@ public class TelegramApiService {
             throw new IllegalArgumentException("File path cannot be null or empty.");
         }
 
-        String downloadUrl = String.format("https://api.telegram.org/file/bot%s/%s", this.botToken, filePath);
+        var botToken = appConfig.getTelegram().getToken(); //скачиваем под дефолтным ботом
+        String downloadUrl = String.format("https://api.telegram.org/file/bot%s/%s", botToken, filePath);
 
         Request request = new Request.Builder()
                 .url(downloadUrl)

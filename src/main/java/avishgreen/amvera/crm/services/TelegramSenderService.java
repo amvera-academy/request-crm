@@ -1,12 +1,15 @@
 package avishgreen.amvera.crm.services;
 
+import avishgreen.amvera.crm.entities.AppUser;
 import avishgreen.amvera.crm.entities.SupportRequest;
 import avishgreen.amvera.crm.entities.TelegramMessage;
 import avishgreen.amvera.crm.enums.SupportRequestStatusType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -36,16 +39,6 @@ public class TelegramSenderService {
         // найдем обращение
         SupportRequest request = supportRequestService.getSupportRequestByIdWithMessages(supportRequestId);
 
-    /*
-        // получим текущего пользователя CRM (модератора)
-        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        AppUser senderUser = userService.loadUserByUsername(currentUsername);
-
-        if (senderUser == null) {
-            throw new IllegalStateException("Не удалось найти текущего пользователя CRM.");
-        }
-     */
-
         // Получаем все сообщения пользователя, отсортированные от НОВОГО к СТАРОМУ
         List<TelegramMessage> userMessages = request.getMessages().stream()
                 .filter(msg -> msg.getSender().getId().equals(request.getAuthor().getId()))
@@ -68,7 +61,9 @@ public class TelegramSenderService {
 
             try {
                 // Пытаемся отправить ответ на ТЕКУЩЕЕ сообщение
-                sentMessage = botApi.answerMessage(request.getChatId(), text, currentReplyId);
+                SendMessage sendMessage = new SendMessage(String.valueOf(request.getChatId()), text);
+                sendMessage.setReplyToMessageId(currentReplyId);
+                sentMessage = botApi.executeSendMessage(sendMessage);
 
                 // Если отправка успешна, сохраняем ID и выходим из цикла
                 finalReplyToMessageId = currentReplyId;
