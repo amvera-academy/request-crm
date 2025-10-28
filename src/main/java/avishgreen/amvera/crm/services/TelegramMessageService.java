@@ -1,5 +1,7 @@
 package avishgreen.amvera.crm.services;
 
+import avishgreen.amvera.crm.entities.SupportRequest;
+import avishgreen.amvera.crm.enums.SupportRequestStatusType;
 import avishgreen.amvera.crm.repositories.TelegramMessageRepository;
 import avishgreen.amvera.crm.entities.TelegramMessage;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +11,9 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -104,14 +108,27 @@ public class TelegramMessageService {
 
     public TelegramMessage findRootMessage(Integer messageId) {
         Optional<TelegramMessage> currentMessageOpt = findByMessageId(messageId);
+        Set<SupportRequestStatusType> closedStatuses = EnumSet.of(
+                SupportRequestStatusType.COMPLETED,
+                SupportRequestStatusType.IGNORE
+        );
 
         // Итеративно идем по цепочке, пока не найдем сообщение,
         // у которого нет replyToMessageId
         while (currentMessageOpt.isPresent() && currentMessageOpt.get().getReplyToMessageId() != null) {
             currentMessageOpt = findByMessageId(currentMessageOpt.get().getReplyToMessageId());
+            if (!currentMessageOpt.isEmpty()) {
+                SupportRequest foundRequest = currentMessageOpt.get().getSupportRequest();
+                if (foundRequest != null) {
+                    if (!closedStatuses.contains(foundRequest.getStatus())) {
+                        return currentMessageOpt.get();//ищем пока не найдем незакрытое обращение
+                    }
+                }
+            }
         }
-        return currentMessageOpt.orElse(null);
+        return null;//если ничего не нашли возвращаем null
     }
+
     public Optional<TelegramMessage> findByMessageId(Integer messageId) {
         return messageRepository.findByTelegramMessageId(messageId);
     }
